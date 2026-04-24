@@ -1,0 +1,108 @@
+.dashboard-stats { display: flex; flex-direction: column; gap: var(--space-6); }
+
+.dashboard-stats__error {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--color-danger-pale);
+  color: var(--color-danger);
+  padding: var(--space-5);
+  border-radius: var(--radius-md);
+}
+
+/* KPI Cards */
+.dashboard-stats__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-4);
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  background: var(--color-white);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5) var(--space-6);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-gray-100);
+  border-left: 4px solid;
+  transition: box-shadow var(--transition-fast);
+}
+.stat-card:hover { box-shadow: var(--shadow-md); }
+
+.stat-card--green { border-left-color: var(--color-primary); }
+.stat-card--blue  { border-left-color: var(--color-info); }
+.stat-card--amber { border-left-color: var(--color-accent); }
+.stat-card--teal  { border-left-color: #16a085; }
+
+.stat-card__icon { font-size: 2rem; line-height: 1; flex-shrink: 0; }
+
+.stat-card__info { display: flex; flex-direction: column; }
+
+.stat-card__value {
+  font-size: 2rem;
+  font-weight: 800;
+  font-family: var(--font-heading);
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+
+.stat-card__label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+/* Charts Grid */
+.dashboard-stats__charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: var(--space-5);
+}
+
+.chart-card {
+  background: var(--color-white);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-gray-100);
+}
+
+.chart-card__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: var(--space-4);
+  color: var(--text-primary);
+}
+
+.chart-card__empty {
+  text-align: center;
+  padding: var(--space-8);
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+/* Keyword Cloud */
+.keyword-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: var(--space-2);
+}
+
+.keyword-cloud__tag {
+  background: var(--color-primary-pale);
+  color: var(--color-primary);
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  cursor: default;
+  transition: background var(--transition-fast);
+}
+.keyword-cloud__tag:hover { background: var(--color-secondary-pale); }
+.keyword-cloud__tag sup { font-size: 0.65em; margin-left: 3px; opacity: 0.7; }

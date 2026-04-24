@@ -1,0 +1,29 @@
+.admin-calendar__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-16);
+  background: var(--color-white);
+  border-radius: var(--radius-lg);
+  border: 2px dashed var(--color-gray-200);
+  gap: var(--space-4);
+  color: var(--text-muted);
+}
+
+.admin-calendar__empty-icon { font-size: 3rem; }
+
+.admin-calendar__empty-icon svg {
+  color: var(--color-primary-light);
+}
+
+.admin-calendar__month-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 12px;
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: var(--color-primary-pale);
+  color: var(--color-primary);
+}

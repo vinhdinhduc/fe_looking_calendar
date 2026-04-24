@@ -1,0 +1,191 @@
+.calendar-page { min-height: 100vh; }
+
+.calendar-page__hero {
+  background: linear-gradient(135deg, var(--color-primary-dark), var(--color-secondary));
+  padding: var(--space-12) 0 var(--space-10);
+  text-align: center;
+}
+
+.calendar-page__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-heading);
+  font-size: 2.2rem;
+  color: var(--color-white);
+}
+.calendar-page__sub { color: rgba(255,255,255,.8); margin-top: var(--space-2); font-size: 1rem; }
+
+.calendar-page__body { padding: var(--space-8) var(--space-5); display: flex; flex-direction: column; gap: var(--space-6); }
+
+/* Month selector */
+.calendar-page__months {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  justify-content: center;
+  background: var(--color-white);
+  border-radius: var(--radius-xl);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-gray-100);
+}
+
+.calendar-page__month-btn {
+  position: relative;
+  min-width: 52px;
+  padding: 10px 8px;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: transparent;
+  transition: all var(--transition-fast);
+}
+
+.calendar-page__month-btn:hover { background: var(--color-primary-pale); color: var(--color-primary); }
+
+.calendar-page__month-btn--active {
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+
+.calendar-page__month-btn--current {
+  font-weight: 700;
+}
+
+.calendar-page__current-dot {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--color-accent);
+}
+
+.calendar-page__month-btn--active .calendar-page__current-dot { background: rgba(255,255,255,.7); }
+
+.calendar-page__month-label h2 {
+  font-size: 1.4rem;
+  color: var(--color-primary-dark);
+  font-family: var(--font-heading);
+}
+
+/* Legend */
+.calendar-page__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.calendar-page__legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.calendar-page__legend-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.calendar-page__legend-dot {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Plants grid */
+.calendar-page__plants {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--space-4);
+}
+
+.calendar-plant-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  background: var(--color-white);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-gray-100);
+  transition: all var(--transition-base);
+  color: inherit;
+}
+
+.calendar-plant-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-primary-pale);
+}
+
+.calendar-plant-card__img {
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--color-gray-100);
+}
+.calendar-plant-card__img img { width: 100%; height: 100%; object-fit: cover; }
+
+.calendar-plant-card__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+
+.calendar-plant-card__name { font-weight: 700; color: var(--color-primary-dark); font-size: 1rem; }
+
+.calendar-plant-card__cat {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.calendar-plant-card__activities { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+
+.calendar-plant-card__activity {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  border: 1px solid;
+}
+
+.calendar-plant-card__arrow {
+  font-size: 1.2rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition: transform var(--transition-fast);
+}
+.calendar-plant-card:hover .calendar-plant-card__arrow { transform: translateX(4px); color: var(--color-primary); }
+
+.calendar-page__empty,
+.calendar-page__error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-12);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.calendar-page__error {
+  flex-direction: row;
+  justify-content: center;
+  color: var(--color-danger);
+}
+
+.calendar-page__empty-icon { font-size: 3rem; color: var(--color-primary-light); }
+
+@media (max-width: 480px) {
+  .calendar-page__plants { grid-template-columns: 1fr; }
+  .calendar-page__months { gap: var(--space-1); }
+  .calendar-page__month-btn { min-width: 40px; font-size: 0.8rem; }
+}

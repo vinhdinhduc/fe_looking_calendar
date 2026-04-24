@@ -1,0 +1,23 @@
+.admin-page { display: flex; flex-direction: column; gap: var(--space-6); }
+
+.admin-page__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-bottom: var(--space-5);
+  border-bottom: 2px solid var(--color-gray-100);
+}
+
+.admin-page__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-heading);
+  font-size: 1.6rem;
+  color: var(--color-primary-dark);
+}
+
+.admin-page__sub {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}

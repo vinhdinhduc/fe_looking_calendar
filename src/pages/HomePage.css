@@ -1,0 +1,267 @@
+/* ── Hero ─────────────────────────────────────────────────── */
+.home-hero {
+  background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 60%, var(--color-secondary) 100%);
+  min-height: 520px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.home-hero::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0; right: 0;
+  height: 60px;
+  background: var(--color-gray-50);
+  clip-path: ellipse(55% 100% at 50% 100%);
+}
+
+.home-hero__inner {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-10);
+  align-items: center;
+  padding: var(--space-16) var(--space-5);
+}
+
+.home-hero__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,255,255,.2);
+  backdrop-filter: blur(8px);
+  color: rgba(255,255,255,.9);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 5px 14px;
+  border-radius: var(--radius-full);
+  margin-bottom: var(--space-4);
+  letter-spacing: 0.04em;
+}
+
+.home-hero__badge svg {
+  color: var(--color-accent-light);
+}
+
+.home-hero__title {
+  font-family: var(--font-heading);
+  font-size: clamp(2rem, 4vw, 3rem);
+  color: var(--color-white);
+  line-height: 1.2;
+  margin-bottom: var(--space-5);
+}
+
+.home-hero__title-accent { color: var(--color-accent-light); }
+
+.home-hero__desc {
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: rgba(255,255,255,.82);
+  margin-bottom: var(--space-8);
+  max-width: 520px;
+}
+
+.home-hero__actions { display: flex; gap: var(--space-4); flex-wrap: wrap; }
+
+.home-hero__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 28px;
+  border-radius: var(--radius-full);
+  font-size: 1rem;
+  font-weight: 700;
+  transition: all var(--transition-base);
+}
+
+.home-hero__btn--primary {
+  background: var(--color-white);
+  color: var(--color-primary-dark);
+}
+.home-hero__btn--primary:hover {
+  background: var(--color-primary-pale);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,.2);
+}
+
+.home-hero__btn--secondary {
+  background: rgba(255,255,255,.15);
+  color: var(--color-white);
+  backdrop-filter: blur(8px);
+  border: 2px solid rgba(255,255,255,.35);
+}
+.home-hero__btn--secondary:hover {
+  background: rgba(255,255,255,.25);
+  transform: translateY(-2px);
+}
+
+.home-hero__visual {
+  flex-shrink: 0;
+}
+
+.home-hero__illustration {
+  font-size: 8.5rem;
+  line-height: 1;
+  animation: sway 6s ease-in-out infinite;
+  filter: drop-shadow(0 8px 24px rgba(0,0,0,.25));
+  color: var(--color-accent-light);
+}
+
+@keyframes sway {
+  0%, 100% { transform: rotate(-4deg); }
+  50%       { transform: rotate(4deg); }
+}
+
+/* ── Sections ─────────────────────────────────────────────── */
+.home-section {
+  padding: var(--space-12) 0;
+}
+
+/* ── Features ─────────────────────────────────────────────── */
+.home-features__header {
+  text-align: center;
+  margin-bottom: var(--space-10);
+}
+
+.home-features__title {
+  font-size: 2rem;
+  font-family: var(--font-heading);
+  color: var(--color-primary-dark);
+}
+
+.home-features__sub {
+  margin-top: var(--space-2);
+  font-size: 1rem;
+  color: var(--text-secondary);
+}
+
+.home-features__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-5);
+}
+
+.feature-card {
+  background: var(--color-white);
+  border-radius: var(--radius-xl);
+  padding: var(--space-8) var(--space-6);
+  border: 1px solid var(--color-gray-100);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  transition: all var(--transition-base);
+  color: inherit;
+}
+
+.feature-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--color-primary-pale);
+}
+
+.feature-card__icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.feature-card__icon--leaf {
+  color: #1a7f45;
+  background: #e2f6ea;
+}
+
+.feature-card__icon--calendar {
+  color: #0f6ca4;
+  background: #e3f3fd;
+}
+
+.feature-card__icon--care {
+  color: #7b4a00;
+  background: #fff1da;
+}
+
+.feature-card__icon--faq {
+  color: #6b1da8;
+  background: #f1e4fb;
+}
+
+.feature-card__title {
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  color: var(--color-primary-dark);
+}
+
+.feature-card__desc {
+  font-size: 0.9rem;
+  line-height: 1.65;
+  color: var(--text-secondary);
+  flex: 1;
+}
+
+.feature-card__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  transition: transform var(--transition-fast);
+  display: inline-block;
+}
+.feature-card:hover .feature-card__cta { transform: translateX(4px); }
+
+/* ── CTA Banner ───────────────────────────────────────────── */
+.home-cta {
+  background: linear-gradient(135deg, var(--color-accent) 0%, #b86a1e 100%);
+  padding: var(--space-10) 0;
+  margin-top: var(--space-8);
+}
+
+.home-cta__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-6);
+  flex-wrap: wrap;
+}
+
+.home-cta__title {
+  font-family: var(--font-heading);
+  font-size: 1.8rem;
+  color: var(--color-white);
+}
+
+.home-cta__sub { color: rgba(255,255,255,.8); margin-top: var(--space-1); }
+
+.home-cta__btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 13px 28px;
+  background: var(--color-white);
+  color: var(--color-accent);
+  border-radius: var(--radius-full);
+  font-weight: 700;
+  font-size: 0.95rem;
+  transition: all var(--transition-base);
+  white-space: nowrap;
+}
+.home-cta__btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,.2);
+}
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .home-hero__inner { grid-template-columns: 1fr; }
+  .home-hero__visual { display: none; }
+  .home-hero__title { font-size: 1.8rem; }
+  .home-cta__inner { flex-direction: column; text-align: center; }
+}

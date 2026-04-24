@@ -1,0 +1,142 @@
+/* ============================================================
+   THUẬN CHÂU – Global Design System
+   Aesthetic: Organic/Natural – Warm forest greens + earth tones
+   ============================================================ */
+
+:root {
+  /* Color Palette */
+  --color-primary:        #1e5c38;   /* Deep forest green */
+  --color-primary-dark:   #143d26;
+  --color-primary-light:  #2e7d52;
+  --color-primary-pale:   #e8f5ee;
+
+  --color-accent:         #c8813a;   /* Warm earth / amber */
+  --color-accent-light:   #f0c484;
+  --color-accent-pale:    #fdf3e4;
+
+  --color-secondary:      #4a7c59;   /* Mid green */
+  --color-secondary-pale: #d4ead9;
+
+  --color-danger:         #c0392b;
+  --color-danger-pale:    #fce8e6;
+  --color-warning:        #e67e22;
+  --color-warning-pale:   #fef0e3;
+  --color-success:        #27ae60;
+  --color-success-pale:   #e8f8ef;
+  --color-info:           #2980b9;
+  --color-info-pale:      #e8f3fb;
+
+  /* Neutrals */
+  --color-white:    #ffffff;
+  --color-gray-50:  #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+
+  /* Text */
+  --text-primary:   #1f2937;
+  --text-secondary: #4b5563;
+  --text-muted:     #9ca3af;
+  --text-inverse:   #ffffff;
+
+  /* Typography */
+  --font-heading: 'Merriweather', Georgia, serif;
+  --font-body:    'Be Vietnam Pro', -apple-system, sans-serif;
+
+  /* Sizing */
+  --radius-sm:  4px;
+  --radius-md:  8px;
+  --radius-lg:  16px;
+  --radius-xl:  24px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm:  0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
+  --shadow-md:  0 4px 12px rgba(0,0,0,.1);
+  --shadow-lg:  0 8px 30px rgba(0,0,0,.12);
+  --shadow-xl:  0 20px 60px rgba(0,0,0,.15);
+
+  /* Spacing */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* Layout */
+  --container-max:    1200px;
+  --sidebar-width:    260px;
+  --header-height:    72px;
+  --admin-header-h:   64px;
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+  --transition-slow: 400ms ease;
+}
+
+/* ── Reset ─────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 16px; scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  background: var(--color-gray-50);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+img { display: block; max-width: 100%; }
+
+a { color: inherit; text-decoration: none; }
+
+button { font-family: inherit; cursor: pointer; border: none; background: none; }
+
+input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+ul, ol { list-style: none; }
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  line-height: 1.3;
+  color: var(--text-primary);
+}
+
+/* ── Utility Classes ────────────────────────────────────────── */
+.container {
+  width: 100%;
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: 0 var(--space-5);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  border: 0;
+}
+
+/* ── Scrollbar ──────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--color-gray-100); }
+::-webkit-scrollbar-thumb { background: var(--color-gray-300); border-radius: var(--radius-full); }
+::-webkit-scrollbar-thumb:hover { background: var(--color-gray-400); }

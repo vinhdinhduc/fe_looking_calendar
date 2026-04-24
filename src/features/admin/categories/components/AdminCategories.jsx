@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { adminCategoryService } from '../services/adminCategoryService'
 import { useToast } from '../../../../context/ToastContext'
 import Button from '../../../../components/Button/Button'
+import PageSizeSelector from '../../../../components/PageSizeSelector/PageSizeSelector'
 import Modal from '../../../../components/Modal/Modal'
 import Pagination from '../../../../components/Pagination/Pagination'
 import Spinner from '../../../../components/Spinner/Spinner'
@@ -81,16 +82,17 @@ const AdminCategories = () => {
   const [editing, setEditing]       = useState(null)
   const [page, setPage]             = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const [pageSize, setPageSize]     = useState(10)
   const [total, setTotal]           = useState(0)
 
-  const fetchAll = async (p = 1) => {
+  const fetchAll = async (p = 1, l = pageSize) => {
     setLoading(true)
     try {
-      const res = await adminCategoryService.getAll({ page: p, limit: 10 })
+      const res = await adminCategoryService.getAll({ page: p, limit: l })
       setCategories(res.data || [])
       setTotalPages(res.meta?.totalPages || 1)
       setTotal(res.meta?.total || 0)
-      setPage(p)
+      setPage(res.meta?.page || p)
     } catch (err) {
       toast.error(err?.response?.data?.message || err.message)
     } finally { setLoading(false) }
@@ -135,6 +137,13 @@ const AdminCategories = () => {
     <div className="admin-table-page">
       <div className="admin-table-page__toolbar">
         <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>{total} nhóm cây</span>
+        <PageSizeSelector
+          value={pageSize}
+          onChange={(next) => {
+            setPageSize(next)
+            fetchAll(1, next)
+          }}
+        />
         <Button variant="primary" onClick={openCreate}>+ Thêm nhóm cây</Button>
       </div>
 

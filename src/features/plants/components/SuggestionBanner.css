@@ -85,11 +85,16 @@
 }
 
 .suggestion-banner__item-name {
+  display: block;
   font-weight: 600;
   font-size: 0.9rem;
+  line-height: 1.35;
 }
 
 .suggestion-banner__item-activity {
+  display: block;
+  margin-top: 2px;
   font-size: 0.75rem;
   opacity: 0.8;
+  line-height: 1.4;
 }

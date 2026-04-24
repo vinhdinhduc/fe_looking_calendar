@@ -6,19 +6,14 @@ import MainLayout from '../layouts/MainLayout'
 import { plantService } from '../features/plants/services/plantService'
 import { getCurrentMonth, MONTHS_VI, MONTH_ABBR } from '../utils/formatDate'
 import Spinner from '../components/Spinner/Spinner'
+import Pagination from '../components/Pagination/Pagination'
+import WeatherAlertBanner from '../components/WeatherAlertBanner'
+import { STAGE_CONFIG, STAGE_LEGEND_KEYS, getStageDisplay } from '../constants/stageConfig'
 import { Link } from 'react-router-dom'
+import { getAgricultureWarnings, getCurrentWeather, getWeekForecast } from '../services/weatherService'
 import './CalendarPage.css'
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
-
-const ACTIVITY_COLORS = {
-  'lam_dat':    { color: '#7f56d9', label: 'Làm đất',    icon: GiSpade },
-  'gieo_trong': { color: '#1a8f4b', label: 'Gieo trồng', icon: LuSprout },
-  'cham_soc':   { color: '#1274b6', label: 'Chăm sóc',   icon: FaDroplet },
-  'phong_tru':  { color: '#be3d2c', label: 'Phòng trừ',  icon: LuShieldCheck },
-  'thu_hoach':  { color: '#d07a17', label: 'Thu hoạch',  icon: FaWheatAwn },
-  'bao_quan':   { color: '#5f6b7a', label: 'Bảo quản',   icon: LuPackage },
-}
 
 const CalendarPage = () => {
   const currentMonth = getCurrentMonth()
@@ -26,20 +21,58 @@ const CalendarPage = () => {
   const [plants, setPlants]   = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState(null)
+  const [page, setPage]       = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [weatherLoading, setWeatherLoading] = useState(true)
+  const [weatherError, setWeatherError] = useState('')
+  const [weatherWarnings, setWeatherWarnings] = useState([])
 
   useEffect(() => {
     const load = async () => {
       setLoading(true)
       setError(null)
       try {
-        const data = await plantService.getSuggestions(selectedMonth)
-        setPlants(data || [])
+        const res = await plantService.getSuggestionsPaged({ month: selectedMonth, page, limit: 12 })
+        setPlants(res.data || [])
+        setTotalPages(res.meta?.totalPages || 1)
       } catch (err) {
         setError(err?.response?.data?.message || err.message)
       } finally { setLoading(false) }
     }
     load()
+  }, [selectedMonth, page])
+
+  useEffect(() => {
+    setPage(1)
   }, [selectedMonth])
+
+  useEffect(() => {
+    let mounted = true
+
+    const loadWeather = async () => {
+      setWeatherLoading(true)
+      setWeatherError('')
+
+      try {
+        const [current, weekForecast] = await Promise.all([
+          getCurrentWeather(),
+          getWeekForecast(),
+        ])
+
+        if (!mounted) return
+        setWeatherWarnings(getAgricultureWarnings({ forecast: [current, ...weekForecast.slice(1)] }))
+      } catch (err) {
+        if (!mounted) return
+        setWeatherError(err?.message || 'Không thể tải dữ liệu thời tiết.')
+        setWeatherWarnings([])
+      } finally {
+        if (mounted) setWeatherLoading(false)
+      }
+    }
+
+    loadWeather()
+    return () => { mounted = false }
+  }, [])
 
   return (
     <MainLayout>
@@ -78,17 +111,22 @@ const CalendarPage = () => {
             <h2>{MONTHS_VI[selectedMonth - 1]}{selectedMonth === currentMonth ? ' (Tháng hiện tại)' : ''}</h2>
           </div>
 
+          <WeatherAlertBanner warnings={weatherWarnings} loading={weatherLoading} error={weatherError} />
+
           {/* Legend */}
           <div className="calendar-page__legend">
-            {Object.entries(ACTIVITY_COLORS).map(([key, { color, label, icon: Icon }]) => (
+            {STAGE_LEGEND_KEYS.map((key) => {
+              const { color, label, icon: Icon } = STAGE_CONFIG[key]
+              return (
               <div key={key} className="calendar-page__legend-item">
                 <span className="calendar-page__legend-dot" style={{ background: color }} />
                 <span className="calendar-page__legend-text">
-                  <Icon aria-hidden="true" />
+                  <Icon aria-hidden="true" style={{ color }} />
                   {label}
                 </span>
               </div>
-            ))}
+              )
+            })}
           </div>
 
           {/* Plant cards */}
@@ -107,46 +145,49 @@ const CalendarPage = () => {
               <p>Không có hoạt động nông nghiệp đặc biệt trong tháng này.</p>
             </div>
           ) : (
-            <div className="calendar-page__plants">
-              {plants.map((plant) => {
-                const activities = (plant.activity_types || '')
-                  .split(',').map((a) => a.trim()).filter(Boolean)
-                return (
-                  <Link key={plant.id} to={`/plants/${plant.id}`} className="calendar-plant-card">
-                    <div className="calendar-plant-card__img">
-                      <img
-                        src={plant.image_url ? `${BASE_URL}${plant.image_url}` : '/placeholder-plant.svg'}
-                        alt={plant.name}
-                        onError={(e) => { e.target.src = '/placeholder-plant.svg' }}
-                      />
-                    </div>
-                    <div className="calendar-plant-card__body">
-                      <h3 className="calendar-plant-card__name">{plant.name}</h3>
-                      {plant.category && (
-                        <span className="calendar-plant-card__cat">{plant.category}</span>
-                      )}
-                      <div className="calendar-plant-card__activities">
-                        {activities.map((act) => {
-                          const info = ACTIVITY_COLORS[act] || { color: '#5f6b7a', icon: LuLeaf, label: act }
-                          const Icon = info.icon
-                          return (
-                            <span
-                              key={act}
-                              className="calendar-plant-card__activity"
-                              style={{ background: info.color + '20', color: info.color, borderColor: info.color + '60' }}
-                            >
-                              <Icon aria-hidden="true" />
-                              {info.label}
-                            </span>
-                          )
-                        })}
+            <>
+              <div className="calendar-page__plants">
+                {plants.map((plant) => {
+                  const activities = (plant.activity_types || '')
+                    .split(',').map((a) => a.trim()).filter(Boolean)
+                  return (
+                    <Link key={plant.id} to={`/plants/${plant.id}`} className="calendar-plant-card">
+                      <div className="calendar-plant-card__img">
+                        <img
+                          src={plant.image_url ? `${BASE_URL}${plant.image_url}` : '/placeholder-plant.svg'}
+                          alt={plant.name}
+                          onError={(e) => { e.target.src = '/placeholder-plant.svg' }}
+                        />
                       </div>
-                    </div>
-                    <LuArrowRight className="calendar-plant-card__arrow" aria-hidden="true" />
-                  </Link>
-                )
-              })}
-            </div>
+                      <div className="calendar-plant-card__body">
+                        <h3 className="calendar-plant-card__name">{plant.name}</h3>
+                        {plant.category?.name && (
+                          <span className="calendar-plant-card__cat">{plant.category.name}</span>
+                        )}
+                        <div className="calendar-plant-card__activities">
+                          {activities.map((act) => {
+                            const info = getStageDisplay({ stageType: act, stageName: act })
+                            const Icon = info.icon
+                            return (
+                              <span
+                                key={act}
+                                className="calendar-plant-card__activity"
+                                style={{ background: info.bg, color: info.color, borderColor: info.color + '55' }}
+                              >
+                                <Icon aria-hidden="true" />
+                                {info.label}
+                              </span>
+                            )
+                          })}
+                        </div>
+                      </div>
+                      <LuArrowRight className="calendar-plant-card__arrow" aria-hidden="true" />
+                    </Link>
+                  )
+                })}
+              </div>
+              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+            </>
           )}
         </div>
       </div>

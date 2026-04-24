@@ -1,25 +1,48 @@
 import React from 'react'
-import { FaDroplet, FaWheatAwn } from 'react-icons/fa6'
-import { GiSpade } from 'react-icons/gi'
-import { LuLeaf, LuPackage, LuSprout } from 'react-icons/lu'
 import { getCurrentMonth, MONTH_ABBR } from '../../../utils/formatDate'
+import { getStageDisplay } from '../../../constants/stageConfig'
 import './CropCalendar.css'
 
-const ACTIVITY_COLORS = {
-  'gieo_trong':  { label: 'Gieo trồng',  color: '#1a8f4b', icon: LuSprout },
-  'cham_soc':    { label: 'Chăm sóc',    color: '#1274b6', icon: FaDroplet },
-  'thu_hoach':   { label: 'Thu hoạch',   color: '#d07a17', icon: FaWheatAwn },
-  'lam_dat':     { label: 'Làm đất',     color: '#7f56d9', icon: GiSpade },
-  'bao_quan':    { label: 'Bảo quản',    color: '#be3d2c', icon: LuPackage },
-}
+const monthLabel = (month) => `Tháng ${month}`
 
-const getActivityInfo = (type) =>
-  ACTIVITY_COLORS[type] || { label: type, color: '#5f6b7a', icon: LuLeaf }
+const normalizeCalendar = (calendar) => {
+  if (Array.isArray(calendar)) {
+    return {
+      mode: 'legacy',
+      entries: calendar,
+    }
+  }
+
+  if (calendar && Array.isArray(calendar.gantt)) {
+    const entries = []
+
+    for (const monthItem of calendar.gantt) {
+      ;['planting', 'caring', 'harvesting'].forEach((activity_type) => {
+        if (monthItem?.[activity_type]) {
+          entries.push({
+            activity_type,
+            month: monthItem.month,
+            activity_label: getStageDisplay({ stageType: activity_type, stageName: activity_type }).label,
+            note: monthItem.notes?.find((n) => n.stage === activity_type)?.note || '',
+          })
+        }
+      })
+    }
+
+    return {
+      mode: 'gantt',
+      entries,
+    }
+  }
+
+  return { mode: 'empty', entries: [] }
+}
 
 const CropCalendar = ({ calendar }) => {
   const currentMonth = getCurrentMonth()
+  const { entries } = normalizeCalendar(calendar)
 
-  if (!calendar || calendar.length === 0) {
+  if (entries.length === 0) {
     return (
       <div className="crop-calendar crop-calendar--empty">
         <p>Chưa có dữ liệu lịch thời vụ cho cây này.</p>
@@ -28,13 +51,17 @@ const CropCalendar = ({ calendar }) => {
   }
 
   // Group by activity type
-  const activityTypes = [...new Set(calendar.map((c) => c.activity_type))]
+  const activityTypes = [...new Set(entries.map((c) => c.activity_type))]
 
   // Build a map: activityType → Set of months
   const activityMap = {}
-  for (const entry of calendar) {
+  const monthSummary = {}
+  for (const entry of entries) {
     if (!activityMap[entry.activity_type]) activityMap[entry.activity_type] = new Set()
     activityMap[entry.activity_type].add(entry.month)
+
+    if (!monthSummary[entry.month]) monthSummary[entry.month] = []
+    monthSummary[entry.month].push(entry.activity_label || getStageDisplay({ stageType: entry.activity_type, stageName: entry.activity_type }).label)
   }
 
   return (
@@ -48,6 +75,7 @@ const CropCalendar = ({ calendar }) => {
                 <th
                   key={i}
                   className={`crop-calendar__month-th ${i + 1 === currentMonth ? 'crop-calendar__month-th--current' : ''}`}
+                  title={`Tháng ${i + 1}${monthSummary[i + 1]?.length ? `: ${monthSummary[i + 1].join(', ')}` : ''}`}
                 >
                   {m}
                   {i + 1 === currentMonth && (
@@ -59,7 +87,7 @@ const CropCalendar = ({ calendar }) => {
           </thead>
           <tbody>
             {activityTypes.map((type) => {
-              const { label, color, icon: Icon } = getActivityInfo(type)
+              const { label, color, icon: Icon } = getStageDisplay({ stageType: type, stageName: type })
               const months = activityMap[type]
 
               return (
@@ -71,18 +99,27 @@ const CropCalendar = ({ calendar }) => {
                   {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => {
                     const isActive  = months.has(month)
                     const isCurrent = month === currentMonth
+                    const tooltip = isActive
+                      ? `${label} - ${monthLabel(month)}${monthSummary[month]?.length ? `\nCác hoạt động tháng này: ${monthSummary[month].join(', ')}` : ''}`
+                      : `${monthLabel(month)} - Không có ${label.toLowerCase()}`
                     return (
                       <td
                         key={month}
                         className={`crop-calendar__cell ${isCurrent ? 'crop-calendar__cell--current' : ''}`}
+                        title={tooltip}
+                        aria-label={tooltip.replaceAll('\n', ' ')}
                       >
                         {isActive && (
-                          <span
-                            className="crop-calendar__bar"
-                            style={{ backgroundColor: color }}
-                            title={`${label} tháng ${month}`}
-                            aria-label={`${label} tháng ${month}`}
-                          />
+                          <div className="crop-calendar__cell-content">
+                            <span
+                              className="crop-calendar__bar"
+                              style={{ backgroundColor: color }}
+                              aria-hidden="true"
+                            />
+                            <span className="crop-calendar__cell-label" style={{ color }}>
+                              {label.replace(' / ', '\n')}
+                            </span>
+                          </div>
                         )}
                       </td>
                     )

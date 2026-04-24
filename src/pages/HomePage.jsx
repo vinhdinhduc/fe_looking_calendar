@@ -2,6 +2,7 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import { FaWheatAwn } from 'react-icons/fa6'
 import { LuArrowRight, LuCalendarDays, LuCircleHelp, LuLeaf, LuWrench } from 'react-icons/lu'
+import WeatherWidget from '../components/WeatherWidget'
 import { SuggestionBanner } from '../features/plants'
 import MainLayout from '../layouts/MainLayout'
 import './HomePage.css'
@@ -76,6 +77,13 @@ const HomePage = () => {
               <FaWheatAwn />
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Month suggestion */}
+      <section className="home-section">
+        <div className="container">
+          <WeatherWidget />
         </div>
       </section>
 

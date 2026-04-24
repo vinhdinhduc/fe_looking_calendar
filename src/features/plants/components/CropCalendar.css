@@ -82,6 +82,15 @@
   vertical-align: middle;
 }
 
+.crop-calendar__cell-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 34px;
+}
+
 .crop-calendar__cell--current {
   background: rgba(30,92,56,.04);
 }
@@ -96,6 +105,33 @@
 }
 
 .crop-calendar__bar:hover { opacity: 0.8; }
+
+.crop-calendar__cell-label {
+  display: none;
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: 0.01em;
+  white-space: pre-line;
+  text-align: center;
+  max-width: 72px;
+}
+
+.crop-calendar__cell:hover .crop-calendar__cell-label,
+.crop-calendar__cell--current .crop-calendar__cell-label {
+  display: inline-block;
+}
+
+@media (max-width: 768px) {
+  .crop-calendar__cell-label {
+    display: none !important;
+  }
+
+  .crop-calendar__bar {
+    height: 18px;
+    width: 100%;
+  }
+}
 
 .crop-calendar__legend {
   display: flex;

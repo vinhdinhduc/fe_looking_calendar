@@ -4,6 +4,7 @@ import { adminUserService } from '../services/adminUserService'
 import { useToast } from '../../../../context/ToastContext'
 import { useAuthContext } from '../../../../context/AuthContext'
 import Button from '../../../../components/Button/Button'
+import PageSizeSelector from '../../../../components/PageSizeSelector/PageSizeSelector'
 import Modal from '../../../../components/Modal/Modal'
 import Spinner from '../../../../components/Spinner/Spinner'
 import Pagination from '../../../../components/Pagination/Pagination'
@@ -144,19 +145,20 @@ const AdminUsers = () => {
   const [saving, setSaving]       = useState(false)
   const [page, setPage]           = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const [pageSize, setPageSize]   = useState(10)
   const [search, setSearch]       = useState('')
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing]     = useState(null)
   const [resetTarget, setResetTarget] = useState(null)
   const [newPassword, setNewPassword] = useState('')
 
-  const fetchUsers = async (p = 1, s = search) => {
+  const fetchUsers = async (p = 1, s = search, l = pageSize) => {
     setLoading(true)
     try {
-      const res = await adminUserService.getAll({ page: p, limit: 10, search: s })
+      const res = await adminUserService.getAll({ page: p, limit: l, search: s })
       setUsers(res.data || [])
       setTotalPages(res.meta?.totalPages || 1)
-      setPage(p)
+      setPage(res.meta?.page || p)
     } catch (err) {
       toast.error(err?.response?.data?.message || err.message)
     } finally { setLoading(false) }
@@ -218,6 +220,13 @@ const AdminUsers = () => {
           <input type="search" placeholder="Tìm người dùng..." value={search} onChange={(e) => setSearch(e.target.value)} />
           <Button type="submit" variant="outline" size="sm">Tìm</Button>
         </form>
+        <PageSizeSelector
+          value={pageSize}
+          onChange={(next) => {
+            setPageSize(next)
+            fetchUsers(1, search, next)
+          }}
+        />
         <Button variant="primary" onClick={openCreate}>+ Tạo tài khoản</Button>
       </div>
 

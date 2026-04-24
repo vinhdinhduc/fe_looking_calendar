@@ -3,16 +3,25 @@ import { Link } from 'react-router-dom'
 import { LuLeaf } from 'react-icons/lu'
 import { plantService } from '../services/plantService'
 import { getCurrentMonth, MONTHS_VI } from '../../../utils/formatDate'
+import { getStageDisplay } from '../../../constants/stageConfig'
 import './SuggestionBanner.css'
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
+
+const formatActivityTypes = (activityTypes = '') =>
+  String(activityTypes)
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean)
+    .map((type) => getStageDisplay({ stageType: type, stageName: type }).label)
+    .join(', ')
 
 const SuggestionBanner = () => {
   const [plants, setPlants] = useState([])
   const month = getCurrentMonth()
 
   useEffect(() => {
-    plantService.getSuggestions(month).then(setPlants).catch(() => {})
+    plantService.getSuggestions(month, { limit: 6 }).then(setPlants).catch(() => {})
   }, [month])
 
   if (!plants.length) return null
@@ -30,7 +39,7 @@ const SuggestionBanner = () => {
       </div>
 
       <div className="suggestion-banner__list">
-        {plants.slice(0, 6).map((p) => (
+        {plants.map((p) => (
           <Link key={p.id} to={`/plants/${p.id}`} className="suggestion-banner__item">
             <div className="suggestion-banner__item-img">
               <img
@@ -42,7 +51,7 @@ const SuggestionBanner = () => {
             <div className="suggestion-banner__item-info">
               <span className="suggestion-banner__item-name">{p.name}</span>
               {p.activity_types && (
-                <span className="suggestion-banner__item-activity">{p.activity_types}</span>
+                <span className="suggestion-banner__item-activity">{formatActivityTypes(p.activity_types)}</span>
               )}
             </div>
           </Link>

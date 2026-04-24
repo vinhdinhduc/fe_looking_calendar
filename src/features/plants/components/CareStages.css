@@ -74,6 +74,18 @@
   margin-top: var(--space-1);
 }
 
+.care-stages__stage-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: var(--space-2);
+  padding: 4px 10px;
+  border: 1px solid;
+  border-radius: var(--radius-full);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
 .care-stages__desc p,
 .care-stages__section,
 .care-stages__notes {

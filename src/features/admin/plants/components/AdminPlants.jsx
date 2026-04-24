@@ -3,6 +3,7 @@ import { adminPlantService } from '../services/adminPlantService'
 import { categoryService } from '../../../categories/services/categoryService'
 import { useToast } from '../../../../context/ToastContext'
 import Button from '../../../../components/Button/Button'
+import PageSizeSelector from '../../../../components/PageSizeSelector/PageSizeSelector'
 import Modal from '../../../../components/Modal/Modal'
 import Pagination from '../../../../components/Pagination/Pagination'
 import Spinner from '../../../../components/Spinner/Spinner'
@@ -142,19 +143,20 @@ const AdminPlants = () => {
   const [deleting, setDeleting]     = useState(null)
   const [page, setPage]             = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const [pageSize, setPageSize]     = useState(10)
   const [search, setSearch]         = useState('')
   const [catFilter, setCatFilter]   = useState('')
   const [modalOpen, setModalOpen]   = useState(false)
   const [editing, setEditing]       = useState(null)
   const searchRef = useRef(search)
 
-  const fetchPlants = async (p = page, s = search, cat = catFilter) => {
+  const fetchPlants = async (p = page, s = search, cat = catFilter, l = pageSize) => {
     setLoading(true)
     try {
-      const res = await adminPlantService.getAll({ page: p, limit: 12, search: s, category_id: cat || undefined })
+      const res = await adminPlantService.getAll({ page: p, limit: l, search: s, category_id: cat || undefined })
       setPlants(res.data || [])
       setTotalPages(res.meta?.totalPages || 1)
-      setPage(p)
+      setPage(res.meta?.page || p)
     } catch (err) {
       toast.error(err?.response?.data?.message || err.message)
     } finally {
@@ -232,6 +234,13 @@ const AdminPlants = () => {
           </select>
           <Button type="submit" variant="outline" size="sm">Tìm</Button>
         </form>
+        <PageSizeSelector
+          value={pageSize}
+          onChange={(next) => {
+            setPageSize(next)
+            fetchPlants(1, search, catFilter, next)
+          }}
+        />
         <Button variant="primary" onClick={openCreate}>+ Thêm cây trồng</Button>
       </div>
 

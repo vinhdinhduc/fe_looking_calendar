@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
-import { LuLeaf, LuMapPin, LuPhone } from 'react-icons/lu'
+import { LuLeaf, LuLogOut, LuMapPin, LuPhone } from 'react-icons/lu'
+import { useAuthContext } from '../context/AuthContext'
 import './MainLayout.css'
 
 const NAV_LINKS = [
@@ -14,6 +15,7 @@ const MainLayout = ({ children }) => {
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const { pathname } = useLocation()
+  const { user, loading, isAuthenticated, logout } = useAuthContext()
 
   useEffect(() => { setMenuOpen(false) }, [pathname])
 
@@ -49,7 +51,21 @@ const MainLayout = ({ children }) => {
           </nav>
 
           <div className="main-layout__header-actions">
-            <Link to="/login" className="main-layout__login-btn">Đăng nhập</Link>
+            {loading ? (
+              <span className="main-layout__auth-skeleton" aria-hidden="true" />
+            ) : isAuthenticated ? (
+              <>
+                <span className="main-layout__user-chip" title={user?.full_name || user?.username}>
+                  {user?.full_name || user?.username}
+                </span>
+                <button className="main-layout__logout-btn" onClick={logout} type="button">
+                  <LuLogOut aria-hidden="true" />
+                  <span>Đăng xuất</span>
+                </button>
+              </>
+            ) : (
+              <Link to="/login" className="main-layout__login-btn">Đăng nhập</Link>
+            )}
             <button
               className="main-layout__burger"
               onClick={() => setMenuOpen(!menuOpen)}

@@ -3,6 +3,7 @@ import { adminFaqService } from '../services/adminFaqService'
 import { adminPlantService } from '../../plants/services/adminPlantService'
 import { useToast } from '../../../../context/ToastContext'
 import Button from '../../../../components/Button/Button'
+import PageSizeSelector from '../../../../components/PageSizeSelector/PageSizeSelector'
 import Modal from '../../../../components/Modal/Modal'
 import Spinner from '../../../../components/Spinner/Spinner'
 import Pagination from '../../../../components/Pagination/Pagination'
@@ -99,17 +100,18 @@ const AdminFaqs = () => {
   const [saving, setSaving]     = useState(false)
   const [page, setPage]         = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
   const [search, setSearch]     = useState('')
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing]   = useState(null)
 
-  const fetchFaqs = async (p = 1, s = search) => {
+  const fetchFaqs = async (p = 1, s = search, l = pageSize) => {
     setLoading(true)
     try {
-      const res = await adminFaqService.getAll({ page: p, limit: 10, search: s })
+      const res = await adminFaqService.getAll({ page: p, limit: l, search: s })
       setFaqs(res.data || [])
       setTotalPages(res.meta?.totalPages || 1)
-      setPage(p)
+      setPage(res.meta?.page || p)
     } catch (err) {
       toast.error(err?.response?.data?.message || err.message)
     } finally { setLoading(false) }
@@ -159,6 +161,13 @@ const AdminFaqs = () => {
           <input type="search" placeholder="Tìm câu hỏi..." value={search} onChange={(e) => setSearch(e.target.value)} />
           <Button type="submit" variant="outline" size="sm">Tìm</Button>
         </form>
+        <PageSizeSelector
+          value={pageSize}
+          onChange={(next) => {
+            setPageSize(next)
+            fetchFaqs(1, search, next)
+          }}
+        />
         <Button variant="primary" onClick={openCreate}>+ Thêm câu hỏi</Button>
       </div>
 

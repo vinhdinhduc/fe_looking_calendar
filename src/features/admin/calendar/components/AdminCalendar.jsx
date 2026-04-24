@@ -4,35 +4,39 @@ import { adminCalendarService } from '../services/adminCalendarService'
 import { adminPlantService } from '../../plants/services/adminPlantService'
 import { useToast } from '../../../../context/ToastContext'
 import Button from '../../../../components/Button/Button'
+import PageSizeSelector from '../../../../components/PageSizeSelector/PageSizeSelector'
 import Modal from '../../../../components/Modal/Modal'
 import Spinner from '../../../../components/Spinner/Spinner'
+import Pagination from '../../../../components/Pagination/Pagination'
 import '../../AdminTable.css'
 import './AdminCalendar.css'
 
 const ACTIVITY_TYPES = [
-  { value: 'lam_dat',   label: 'Làm đất' },
-  { value: 'gieo_trong', label: 'Gieo trồng' },
-  { value: 'cham_soc',  label: 'Chăm sóc' },
-  { value: 'phong_tru', label: 'Phòng trừ sâu bệnh' },
-  { value: 'thu_hoach', label: 'Thu hoạch' },
-  { value: 'bao_quan',  label: 'Bảo quản' },
+  { value: 'planting', label: 'Gieo trồng' },
+  { value: 'caring', label: 'Chăm sóc' },
+  { value: 'harvesting', label: 'Thu hoạch' },
 ]
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => ({ value: i + 1, label: `Tháng ${i + 1}` }))
 
-const EMPTY_FORM = { plant_id: '', month: '', activity_type: '', notes: '' }
+const EMPTY_FORM = { plant_id: '', month: '', stage: '', note: '' }
 
 const validate = (f) => {
   const e = {}
   if (!f.plant_id)      e.plant_id = 'Chọn cây trồng'
   if (!f.month)         e.month    = 'Chọn tháng'
-  if (!f.activity_type) e.activity_type = 'Chọn loại hoạt động'
+  if (!f.stage) e.stage = 'Chọn loại hoạt động'
   return e
 }
 
 const CalendarForm = ({ initial, plants, onSave, onCancel, saving }) => {
   const [form, setForm]   = useState(initial || EMPTY_FORM)
   const [errors, setErrors] = useState({})
+
+  useEffect(() => {
+    setForm(initial || EMPTY_FORM)
+    setErrors({})
+  }, [initial])
 
   const set = (k, v) => {
     setForm((p) => ({ ...p, [k]: v }))
@@ -79,14 +83,14 @@ const CalendarForm = ({ initial, plants, onSave, onCancel, saving }) => {
       <div className="admin-form__field">
         <label className="admin-form__label admin-form__label--required">Loại hoạt động</label>
         <select
-          className={`admin-form__select ${errors.activity_type ? 'admin-form__input--error' : ''}`}
-          value={form.activity_type}
-          onChange={(e) => set('activity_type', e.target.value)}
+          className={`admin-form__select ${errors.stage ? 'admin-form__input--error' : ''}`}
+          value={form.stage}
+          onChange={(e) => set('stage', e.target.value)}
         >
           <option value="">-- Chọn hoạt động --</option>
           {ACTIVITY_TYPES.map((a) => <option key={a.value} value={a.value}>{a.label}</option>)}
         </select>
-        {errors.activity_type && <span className="admin-form__error-msg">{errors.activity_type}</span>}
+        {errors.stage && <span className="admin-form__error-msg">{errors.stage}</span>}
       </div>
 
       <div className="admin-form__field">
@@ -94,8 +98,8 @@ const CalendarForm = ({ initial, plants, onSave, onCancel, saving }) => {
         <textarea
           className="admin-form__textarea"
           rows={3}
-          value={form.notes}
-          onChange={(e) => set('notes', e.target.value)}
+          value={form.note}
+          onChange={(e) => set('note', e.target.value)}
           placeholder="Ghi chú thêm về hoạt động này..."
         />
       </div>
@@ -119,6 +123,9 @@ const AdminCalendar = () => {
   const [saving, setSaving]         = useState(false)
   const [modalOpen, setModalOpen]   = useState(false)
   const [editing, setEditing]       = useState(null)
+  const [page, setPage]             = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [pageSize, setPageSize]     = useState(10)
 
   const fetchPlants = async () => {
     try {
@@ -127,19 +134,23 @@ const AdminCalendar = () => {
     } catch { /* ignore */ }
   }
 
-  const fetchCalendar = async (plantId) => {
+  const fetchCalendar = async (plantId, p = page, l = pageSize) => {
     if (!plantId) { setEntries([]); return }
     setLoading(true)
     try {
-      const data = await adminCalendarService.getByPlant(plantId)
-      setEntries(data)
+      const res = await adminCalendarService.getByPlant(plantId, { page: p, limit: l })
+      setEntries(res.data || [])
+      setTotalPages(res.meta?.totalPages || 1)
+      setPage(res.meta?.page || p)
     } catch (err) {
       toast.error(err?.response?.data?.message || err.message)
     } finally { setLoading(false) }
   }
 
   useEffect(() => { fetchPlants() }, [])
-  useEffect(() => { fetchCalendar(selectedPlant) }, [selectedPlant])
+  useEffect(() => {
+    if (selectedPlant) fetchCalendar(selectedPlant, 1, pageSize)
+  }, [selectedPlant])
 
   const openCreate = () => { setEditing(null); setModalOpen(true) }
   const openEdit   = (entry) => { setEditing(entry); setModalOpen(true) }
@@ -156,7 +167,7 @@ const AdminCalendar = () => {
         toast.success('Thêm lịch thành công!')
       }
       closeModal()
-      if (selectedPlant) fetchCalendar(selectedPlant)
+      if (selectedPlant) fetchCalendar(selectedPlant, page, pageSize)
     } catch (err) {
       toast.error(err?.response?.data?.message || err.message)
     } finally { setSaving(false) }
@@ -167,7 +178,8 @@ const AdminCalendar = () => {
     try {
       await adminCalendarService.remove(entry.id)
       toast.success('Đã xóa!')
-      fetchCalendar(selectedPlant)
+      const nextPage = entries.length === 1 && page > 1 ? page - 1 : page
+      fetchCalendar(selectedPlant, nextPage, pageSize)
     } catch (err) {
       toast.error(err?.response?.data?.message || err.message)
     }
@@ -191,6 +203,14 @@ const AdminCalendar = () => {
             {plants.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
         </div>
+        <PageSizeSelector
+          value={pageSize}
+          onChange={(next) => {
+            setPageSize(next)
+            setPage(1)
+            if (selectedPlant) fetchCalendar(selectedPlant, 1, next)
+          }}
+        />
         <Button variant="primary" onClick={openCreate}>
           <LuPlus aria-hidden="true" />
           Thêm lịch
@@ -210,7 +230,6 @@ const AdminCalendar = () => {
             <table className="admin-table">
               <thead>
                 <tr>
-                  <th>Cây trồng</th>
                   <th>Tháng</th>
                   <th>Hoạt động</th>
                   <th>Ghi chú</th>
@@ -219,13 +238,12 @@ const AdminCalendar = () => {
               </thead>
               <tbody>
                 {entries.length === 0 ? (
-                  <tr><td colSpan={5} className="admin-table__empty">Chưa có lịch nào cho cây này</td></tr>
+                  <tr><td colSpan={4} className="admin-table__empty">Chưa có lịch nào cho cây này</td></tr>
                 ) : entries.map((e) => (
                   <tr key={e.id}>
-                    <td>{e.plant?.name || '—'}</td>
                     <td><span className="admin-calendar__month-badge">Tháng {e.month}</span></td>
-                    <td>{getActivityLabel(e.activity_type)}</td>
-                    <td style={{ color: 'var(--text-secondary)', maxWidth: 200 }}>{e.notes || '—'}</td>
+                    <td>{getActivityLabel(e.stage)}</td>
+                    <td style={{ color: 'var(--text-secondary)', maxWidth: 200 }}>{e.note || '—'}</td>
                     <td>
                       <div className="admin-table__actions">
                         <button className="admin-table__action-btn admin-table__action-btn--edit" onClick={() => openEdit(e)}>Sửa</button>
@@ -240,9 +258,20 @@ const AdminCalendar = () => {
         </div>
       )}
 
+      {selectedPlant && entries.length > 0 && (
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          onPageChange={(p) => {
+            setPage(p)
+            fetchCalendar(selectedPlant, p, pageSize)
+          }}
+        />
+      )}
+
       <Modal isOpen={modalOpen} onClose={closeModal} title={editing ? 'Sửa lịch thời vụ' : 'Thêm lịch thời vụ'} size="md">
         <CalendarForm
-          initial={editing ? { ...editing, plant_id: editing.plant_id || editing.plant?.id } : { plant_id: selectedPlant }}
+          initial={editing ? { ...editing, plant_id: editing.plant_id || editing.plant?.id } : { ...EMPTY_FORM, plant_id: selectedPlant }}
           plants={plants}
           onSave={handleSave}
           onCancel={closeModal}

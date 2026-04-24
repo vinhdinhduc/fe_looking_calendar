@@ -4,9 +4,11 @@ import { adminCareStageService } from '../services/adminCareStageService'
 import { adminPlantService } from '../../plants/services/adminPlantService'
 import { useToast } from '../../../../context/ToastContext'
 import Button from '../../../../components/Button/Button'
+import PageSizeSelector from '../../../../components/PageSizeSelector/PageSizeSelector'
 import Modal from '../../../../components/Modal/Modal'
 import Pagination from '../../../../components/Pagination/Pagination'
 import Spinner from '../../../../components/Spinner/Spinner'
+import { STAGE_TYPE_OPTIONS } from '../../../../constants/stageConfig'
 import '../../AdminTable.css'
 import './AdminCareStages.css'
 
@@ -14,7 +16,7 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
 
 const EMPTY_FORM = {
   plant_id: '', stage_name: '', description: '',
-  fertilizer_guide: '', pest_control: '', duration: '', stage_order: 1,
+  stage_type: '', fertilizer_guide: '', pest_control: '', duration: '', stage_order: 1,
 }
 
 const validate = (f) => {
@@ -71,6 +73,20 @@ const StageForm = ({ initial, plants, onSave, onCancel, saving }) => {
           />
           {errors.stage_name && <span className="admin-form__error-msg">{errors.stage_name}</span>}
         </div>
+      </div>
+
+      <div className="admin-form__field">
+        <label className="admin-form__label">Loại giai đoạn (để hiển thị màu)</label>
+        <select
+          className="admin-form__select"
+          value={form.stage_type || ''}
+          onChange={(e) => set('stage_type', e.target.value)}
+        >
+          <option value="">-- Không chọn (tự suy luận từ tên) --</option>
+          {STAGE_TYPE_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
       </div>
 
       <div className="admin-form__row">
@@ -148,10 +164,10 @@ const AdminCareStages = () => {
   const [modalOpen, setModalOpen]       = useState(false)
   const [editing, setEditing]           = useState(null)
   const [page, setPage]                 = useState(1)
+  const [totalPages, setTotalPages]     = useState(1)
+  const [pageSize, setPageSize]         = useState(10)
 
-  const limit = 8
-  const totalPages = Math.max(1, Math.ceil(stages.length / limit))
-  const pagedStages = stages.slice((page - 1) * limit, page * limit)
+  const limit = pageSize
 
   const fetchPlants = async () => {
     try {
@@ -160,23 +176,23 @@ const AdminCareStages = () => {
     } catch { /* ignore */ }
   }
 
-  const fetchStages = async (plantId) => {
+  const fetchStages = async (plantId, nextPage = page, nextLimit = limit) => {
     if (!plantId) { setStages([]); return }
     setLoading(true)
     try {
-      const data = await adminCareStageService.getByPlant(plantId)
-      setStages(Array.isArray(data) ? data : [])
-      setPage(1)
+      const res = await adminCareStageService.getByPlant(plantId, { page: nextPage, limit: nextLimit })
+      setStages(res.data || [])
+      setTotalPages(res.meta?.totalPages || 1)
+      setPage(res.meta?.page || nextPage)
     } catch (err) {
       toast.error(err?.response?.data?.message || err.message)
     } finally { setLoading(false) }
   }
 
   useEffect(() => { fetchPlants() }, [])
-  useEffect(() => { fetchStages(selectedPlant) }, [selectedPlant])
   useEffect(() => {
-    if (page > totalPages) setPage(totalPages)
-  }, [page, totalPages])
+    if (selectedPlant) fetchStages(selectedPlant, 1, limit)
+  }, [selectedPlant])
 
   const openCreate = () => { setEditing(null); setModalOpen(true) }
   const openEdit   = (stage) => { setEditing(stage); setModalOpen(true) }
@@ -186,6 +202,7 @@ const AdminCareStages = () => {
     const payload = {
       plant_id: Number(data.plant_id),
       stage_name: data.stage_name?.trim(),
+      stage_type: data.stage_type || null,
       description: data.description?.trim() || null,
       duration: data.duration?.trim() || null,
       stage_order: Number(data.stage_order) || 1,
@@ -203,7 +220,7 @@ const AdminCareStages = () => {
         toast.success('Thêm giai đoạn thành công!')
       }
       closeModal()
-      if (selectedPlant) fetchStages(selectedPlant)
+      if (selectedPlant) fetchStages(selectedPlant, page, limit)
     } catch (err) {
       toast.error(err?.response?.data?.message || err.message)
     } finally { setSaving(false) }
@@ -214,7 +231,8 @@ const AdminCareStages = () => {
     try {
       await adminCareStageService.remove(stage.id)
       toast.success('Đã xóa giai đoạn!')
-      fetchStages(selectedPlant)
+      const nextPage = stages.length === 1 && page > 1 ? page - 1 : page
+      fetchStages(selectedPlant, nextPage, limit)
     } catch (err) {
       toast.error(err?.response?.data?.message || err.message)
     }
@@ -235,6 +253,14 @@ const AdminCareStages = () => {
             {plants.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
         </div>
+        <PageSizeSelector
+          value={pageSize}
+          onChange={(next) => {
+            setPageSize(next)
+            setPage(1)
+            if (selectedPlant) fetchStages(selectedPlant, 1, next)
+          }}
+        />
         <Button variant="primary" onClick={openCreate}>
           <LuPlus aria-hidden="true" />
           Thêm giai đoạn
@@ -264,7 +290,7 @@ const AdminCareStages = () => {
               <tbody>
                 {stages.length === 0 ? (
                   <tr><td colSpan={5} className="admin-table__empty">Chưa có giai đoạn nào</td></tr>
-                ) : pagedStages.map((s, i) => (
+                ) : stages.map((s, i) => (
                   <tr key={s.id}>
                     <td style={{ color: 'var(--text-muted)' }}>{(page - 1) * limit + i + 1}</td>
                     <td><strong>{s.stage_name}</strong></td>
@@ -287,7 +313,14 @@ const AdminCareStages = () => {
       )}
 
       {selectedPlant && stages.length > 0 && (
-        <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          onPageChange={(p) => {
+            setPage(p)
+            fetchStages(selectedPlant, p, limit)
+          }}
+        />
       )}
 
       <Modal isOpen={modalOpen} onClose={closeModal} title={editing ? 'Sửa giai đoạn chăm sóc' : 'Thêm giai đoạn chăm sóc'} size="lg">
@@ -296,6 +329,7 @@ const AdminCareStages = () => {
             ? {
                 plant_id: editing.plant_id || selectedPlant,
                 stage_name: editing.stage_name || '',
+                stage_type: editing.stage_type || '',
                 description: editing.description || '',
                 duration: editing.duration || (editing.duration_days ? `${editing.duration_days} ngày` : editing.time_period || ''),
                 stage_order: editing.stage_order ?? editing.sort_order ?? 1,

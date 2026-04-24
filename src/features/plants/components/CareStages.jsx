@@ -1,31 +1,9 @@
 import React, { useState } from 'react'
-import { FaDroplet, FaWheatAwn } from 'react-icons/fa6'
-import { GiSpade } from 'react-icons/gi'
-import { LuClipboardList, LuFileText, LuImage, LuLeaf, LuPackage, LuShieldCheck, LuSprout, LuTimer, LuWrench } from 'react-icons/lu'
+import { LuFileText, LuImage, LuTimer, LuWrench } from 'react-icons/lu'
+import { getStageDisplay } from '../../../constants/stageConfig'
 import './CareStages.css'
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
-
-const STAGE_ICONS = {
-  'lam_dat':      GiSpade,
-  'gieo_hat':     LuSprout,
-  'cham_soc':     FaDroplet,
-  'phong_tru':    LuShieldCheck,
-  'thu_hoach':    FaWheatAwn,
-  'bao_quan':     LuPackage,
-}
-
-const getIcon = (name = '') => {
-  const lower = name.toLowerCase()
-  if (lower.includes('đất') || lower.includes('dat'))      return STAGE_ICONS.lam_dat
-  if (lower.includes('gieo') || lower.includes('hạt'))    return STAGE_ICONS.gieo_hat
-  if (lower.includes('tưới') || lower.includes('tuoi'))   return STAGE_ICONS.cham_soc
-  if (lower.includes('sâu') || lower.includes('bệnh'))    return STAGE_ICONS.phong_tru
-  if (lower.includes('thu hoạch'))                        return STAGE_ICONS.thu_hoach
-  if (lower.includes('bảo quản'))                         return STAGE_ICONS.bao_quan
-  if (lower.includes('bón') || lower.includes('phân'))    return LuLeaf
-  return LuClipboardList
-}
 
 const CareStages = ({ stages }) => {
   const [activeIdx, setActiveIdx] = useState(0)
@@ -39,7 +17,8 @@ const CareStages = ({ stages }) => {
   }
 
   const active = stages[activeIdx]
-  const ActiveIcon = getIcon(active.stage_name)
+  const activeStage = getStageDisplay({ stageType: active.stage_type, stageName: active.stage_name })
+  const ActiveIcon = activeStage.icon
   const durationText = active.duration || (active.duration_days ? `${active.duration_days} ngày` : active.time_period)
   const techniquesText = active.fertilizer_guide || active.techniques
   const notesText = active.pest_control || active.notes
@@ -49,7 +28,8 @@ const CareStages = ({ stages }) => {
       {/* Tab navigation */}
       <div className="care-stages__tabs" role="tablist" aria-label="Giai đoạn chăm sóc">
         {stages.map((s, i) => {
-          const Icon = getIcon(s.stage_name)
+          const stageDisplay = getStageDisplay({ stageType: s.stage_type, stageName: s.stage_name })
+          const Icon = stageDisplay.icon
           return (
             <button
               key={s.id}
@@ -57,6 +37,11 @@ const CareStages = ({ stages }) => {
               aria-selected={i === activeIdx}
               className={`care-stages__tab ${i === activeIdx ? 'care-stages__tab--active' : ''}`}
               onClick={() => setActiveIdx(i)}
+              style={
+                i === activeIdx
+                  ? { background: stageDisplay.color, borderColor: stageDisplay.color, color: '#fff' }
+                  : { background: stageDisplay.bg, borderColor: `${stageDisplay.color}33`, color: stageDisplay.color }
+              }
             >
               <Icon className="care-stages__tab-icon" aria-hidden="true" />
               <span className="care-stages__tab-name">{s.stage_name}</span>
@@ -71,6 +56,17 @@ const CareStages = ({ stages }) => {
           <ActiveIcon className="care-stages__header-icon" aria-hidden="true" />
           <div>
             <h3 className="care-stages__title">{active.stage_name}</h3>
+            <span
+              className="care-stages__stage-badge"
+              style={{
+                background: activeStage.bg,
+                color: activeStage.color,
+                borderColor: `${activeStage.color}40`,
+              }}
+            >
+              <ActiveIcon aria-hidden="true" />
+              {activeStage.label}
+            </span>
             {durationText && (
               <p className="care-stages__duration">
                 <LuTimer aria-hidden="true" />

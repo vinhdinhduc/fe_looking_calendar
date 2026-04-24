@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { FaRegCircleUser } from 'react-icons/fa6'
 import {
@@ -18,6 +18,7 @@ import {
 import { useAuthContext } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import { authService } from '../features/auth/services/authService'
+import { getCurrentWeather } from '../services/weatherService'
 import { clearTokens } from '../utils/tokenHelper'
 import { getRoleLabel } from '../utils/roleLabel'
 import './AdminLayout.css'
@@ -38,6 +39,21 @@ const AdminLayout = ({ children }) => {
   const navigate = useNavigate()
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [weather, setWeather] = useState(null)
+
+  const formatTemperature = (value) => (Number.isFinite(Number(value)) ? `${Math.round(Number(value))}°` : '--')
+
+  useEffect(() => {
+    let mounted = true
+
+    getCurrentWeather()
+      .then((data) => {
+        if (mounted) setWeather(data)
+      })
+      .catch(() => {})
+
+    return () => { mounted = false }
+  }, [])
 
   const handleLogout = async () => {
     try { await authService.logout() } catch { /* ignore */ }
@@ -127,6 +143,12 @@ const AdminLayout = ({ children }) => {
             <LuMenu aria-hidden="true" />
           </button>
           <div className="admin-layout__topbar-right">
+            {weather && (
+              <span className="admin-layout__topbar-weather" title={weather.weatherLabel}>
+                <span className="admin-layout__topbar-weather-icon" aria-hidden="true">{weather.weatherIcon}</span>
+                <span>{formatTemperature(weather.temperatureMax)} / {formatTemperature(weather.temperatureMin)}</span>
+              </span>
+            )}
             <span className="admin-layout__topbar-user">
               <FaRegCircleUser className="admin-layout__topbar-user-icon" aria-hidden="true" />
               {user?.full_name || user?.username}

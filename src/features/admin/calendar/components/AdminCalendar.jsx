@@ -8,18 +8,26 @@ import PageSizeSelector from '../../../../components/PageSizeSelector/PageSizeSe
 import Modal from '../../../../components/Modal/Modal'
 import Spinner from '../../../../components/Spinner/Spinner'
 import Pagination from '../../../../components/Pagination/Pagination'
+import { STAGE_LEGEND_KEYS, getStageDisplay, normalizeStageType } from '../../../../constants/stageConfig'
 import '../../AdminTable.css'
 import './AdminCalendar.css'
 
-const ACTIVITY_TYPES = [
-  { value: 'planting', label: 'Gieo trồng' },
-  { value: 'caring', label: 'Chăm sóc' },
-  { value: 'harvesting', label: 'Thu hoạch' },
-]
+const ACTIVITY_TYPES = STAGE_LEGEND_KEYS.map((value) => ({
+  value,
+  label: getStageDisplay({ stageType: value, stageName: value }).label,
+}))
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => ({ value: i + 1, label: `Tháng ${i + 1}` }))
 
 const EMPTY_FORM = { plant_id: '', month: '', stage: '', note: '' }
+
+const getEntryStage = (entry) => normalizeStageType(entry?.stage || entry?.stage_type || entry?.activity_type) || ''
+
+const getEntryActivityLabel = (entry) => {
+  const stage = getEntryStage(entry)
+  if (entry?.stage_label) return entry.stage_label
+  return getStageDisplay({ stageType: stage, stageName: entry?.stage_name || stage || entry?.note || '' }).label
+}
 
 const validate = (f) => {
   const e = {}
@@ -37,6 +45,7 @@ const CalendarForm = ({ initial, plants, onSave, onCancel, saving }) => {
     setForm(initial || EMPTY_FORM)
     setErrors({})
   }, [initial])
+console.log("Check init",initial);
 
   const set = (k, v) => {
     setForm((p) => ({ ...p, [k]: v }))
@@ -153,7 +162,7 @@ const AdminCalendar = () => {
   }, [selectedPlant])
 
   const openCreate = () => { setEditing(null); setModalOpen(true) }
-  const openEdit   = (entry) => { setEditing(entry); setModalOpen(true) }
+  const openEdit   = (entry) => { setEditing({ ...entry, stage: getEntryStage(entry) }); setModalOpen(true) }
   const closeModal = () => { setModalOpen(false); setEditing(null) }
 
   const handleSave = async (data) => {
@@ -185,8 +194,7 @@ const AdminCalendar = () => {
     }
   }
 
-  const getActivityLabel = (type) =>
-    ACTIVITY_TYPES.find((a) => a.value === type)?.label || type
+  const getActivityLabel = (entry) => getEntryActivityLabel(entry)
 
   return (
     <div className="admin-table-page">
@@ -242,7 +250,7 @@ const AdminCalendar = () => {
                 ) : entries.map((e) => (
                   <tr key={e.id}>
                     <td><span className="admin-calendar__month-badge">Tháng {e.month}</span></td>
-                    <td>{getActivityLabel(e.stage)}</td>
+                    <td>{getActivityLabel(e)}</td>
                     <td style={{ color: 'var(--text-secondary)', maxWidth: 200 }}>{e.note || '—'}</td>
                     <td>
                       <div className="admin-table__actions">
@@ -271,7 +279,7 @@ const AdminCalendar = () => {
 
       <Modal isOpen={modalOpen} onClose={closeModal} title={editing ? 'Sửa lịch thời vụ' : 'Thêm lịch thời vụ'} size="md">
         <CalendarForm
-          initial={editing ? { ...editing, plant_id: editing.plant_id || editing.plant?.id } : { ...EMPTY_FORM, plant_id: selectedPlant }}
+          initial={editing ? { ...editing, plant_id: editing.plant_id || editing.plant?.id, stage: getEntryStage(editing) } : { ...EMPTY_FORM, plant_id: selectedPlant }}
           plants={plants}
           onSave={handleSave}
           onCancel={closeModal}

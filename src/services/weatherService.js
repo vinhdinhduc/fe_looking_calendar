@@ -175,6 +175,11 @@ export const getCurrentWeather = async () => {
   return weather.current;
 };
 
+export const getWeatherOverview = async () => {
+  const weather = await loadWeather();
+  return weather;
+};
+
 export const getWeekForecast = async () => {
   const weather = await loadWeather();
   return weather.forecast || [];
@@ -251,6 +256,7 @@ export const getAgricultureWarnings = (weatherData = {}) => {
 
 export default {
   getCurrentWeather,
+  getWeatherOverview,
   getWeekForecast,
   getAgricultureWarnings,
   getWeatherCodeInfo,

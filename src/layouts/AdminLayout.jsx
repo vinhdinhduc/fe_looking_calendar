@@ -18,7 +18,7 @@ import {
 import { useAuthContext } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import { authService } from '../features/auth/services/authService'
-import { getCurrentWeather } from '../services/weatherService'
+import { getWeatherOverview } from '../services/weatherService'
 import { clearTokens } from '../utils/tokenHelper'
 import { getRoleLabel } from '../utils/roleLabel'
 import './AdminLayout.css'
@@ -40,15 +40,18 @@ const AdminLayout = ({ children }) => {
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [weather, setWeather] = useState(null)
+  const [weatherLocation, setWeatherLocation] = useState('')
 
   const formatTemperature = (value) => (Number.isFinite(Number(value)) ? `${Math.round(Number(value))}°` : '--')
 
   useEffect(() => {
     let mounted = true
 
-    getCurrentWeather()
+    getWeatherOverview()
       .then((data) => {
-        if (mounted) setWeather(data)
+        if (!mounted) return
+        setWeather(data?.current || null)
+        setWeatherLocation(data?.location?.name || '')
       })
       .catch(() => {})
 
@@ -144,9 +147,10 @@ const AdminLayout = ({ children }) => {
           </button>
           <div className="admin-layout__topbar-right">
             {weather && (
-              <span className="admin-layout__topbar-weather" title={weather.weatherLabel}>
+              <span className="admin-layout__topbar-weather" title={weatherLocation ? `${weather.weatherLabel} - ${weatherLocation}` : weather.weatherLabel}>
                 <span className="admin-layout__topbar-weather-icon" aria-hidden="true">{weather.weatherIcon}</span>
-                <span>{formatTemperature(weather.temperatureMax)} / {formatTemperature(weather.temperatureMin)}</span>
+                <span className="admin-layout__topbar-weather-temp">{formatTemperature(weather.temperatureMax)} / {formatTemperature(weather.temperatureMin)}</span>
+                {weatherLocation && <span className="admin-layout__topbar-weather-location">{weatherLocation}</span>}
               </span>
             )}
             <span className="admin-layout__topbar-user">

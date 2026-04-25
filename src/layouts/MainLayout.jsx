@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
-import { LuLeaf, LuLogOut, LuMapPin, LuPhone } from 'react-icons/lu'
+import { LuChevronDown, LuLeaf, LuLogOut, LuMapPin, LuPhone, LuShield } from 'react-icons/lu'
 import { useAuthContext } from '../context/AuthContext'
 import './MainLayout.css'
 
@@ -14,15 +14,39 @@ const NAV_LINKS = [
 const MainLayout = ({ children }) => {
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const userMenuRef = useRef(null)
   const { pathname } = useLocation()
-  const { user, loading, isAuthenticated, logout } = useAuthContext()
+  const { user, loading, isAuthenticated, isAdmin, logout } = useAuthContext()
 
-  useEffect(() => { setMenuOpen(false) }, [pathname])
+  useEffect(() => {
+    setMenuOpen(false)
+    setUserMenuOpen(false)
+  }, [pathname])
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 16)
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  useEffect(() => {
+    const onDocumentClick = (event) => {
+      if (!userMenuRef.current?.contains(event.target)) {
+        setUserMenuOpen(false)
+      }
+    }
+
+    const onEscape = (event) => {
+      if (event.key === 'Escape') setUserMenuOpen(false)
+    }
+
+    document.addEventListener('mousedown', onDocumentClick)
+    document.addEventListener('keydown', onEscape)
+    return () => {
+      document.removeEventListener('mousedown', onDocumentClick)
+      document.removeEventListener('keydown', onEscape)
+    }
   }, [])
 
   return (
@@ -54,15 +78,34 @@ const MainLayout = ({ children }) => {
             {loading ? (
               <span className="main-layout__auth-skeleton" aria-hidden="true" />
             ) : isAuthenticated ? (
-              <>
-                <span className="main-layout__user-chip" title={user?.full_name || user?.username}>
-                  {user?.full_name || user?.username}
-                </span>
-                <button className="main-layout__logout-btn" onClick={logout} type="button">
-                  <LuLogOut aria-hidden="true" />
-                  <span>Đăng xuất</span>
+              <div className="main-layout__user-menu" ref={userMenuRef}>
+                <button
+                  className="main-layout__user-chip"
+                  type="button"
+                  title={user?.full_name || user?.username}
+                  onClick={() => setUserMenuOpen((prev) => !prev)}
+                  aria-expanded={userMenuOpen}
+                  aria-haspopup="menu"
+                >
+                  <span>{user?.full_name || user?.username}</span>
+                  <LuChevronDown className={`main-layout__user-caret ${userMenuOpen ? 'main-layout__user-caret--open' : ''}`} aria-hidden="true" />
                 </button>
-              </>
+
+                {userMenuOpen && (
+                  <div className="main-layout__user-dropdown" role="menu">
+                    {isAdmin && (
+                      <Link to="/admin/dashboard" className="main-layout__user-menu-item" role="menuitem">
+                        <LuShield aria-hidden="true" />
+                        <span>Xem quản trị</span>
+                      </Link>
+                    )}
+                    <button className="main-layout__user-menu-item" onClick={logout} type="button" role="menuitem">
+                      <LuLogOut aria-hidden="true" />
+                      <span>Đăng xuất</span>
+                    </button>
+                  </div>
+                )}
+              </div>
             ) : (
               <Link to="/login" className="main-layout__login-btn">Đăng nhập</Link>
             )}

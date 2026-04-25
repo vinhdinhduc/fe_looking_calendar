@@ -1,9 +1,11 @@
 import React from 'react'
 import { getCurrentMonth, MONTH_ABBR } from '../../../utils/formatDate'
-import { getStageDisplay } from '../../../constants/stageConfig'
+import { getStageDisplay, normalizeStageType, STAGE_LEGEND_KEYS } from '../../../constants/stageConfig'
 import './CropCalendar.css'
 
 const monthLabel = (month) => `Tháng ${month}`
+
+const GANTT_ACTIVITY_KEYS = [...STAGE_LEGEND_KEYS, 'planting', 'caring', 'harvesting']
 
 const normalizeCalendar = (calendar) => {
   if (Array.isArray(calendar)) {
@@ -15,15 +17,21 @@ const normalizeCalendar = (calendar) => {
 
   if (calendar && Array.isArray(calendar.gantt)) {
     const entries = []
+    const seen = new Set()
 
     for (const monthItem of calendar.gantt) {
-      ;['planting', 'caring', 'harvesting'].forEach((activity_type) => {
-        if (monthItem?.[activity_type]) {
+      GANTT_ACTIVITY_KEYS.forEach((activity_type) => {
+        const normalizedType = normalizeStageType(activity_type)
+        const entryKey = `${monthItem?.month}-${normalizedType}`
+
+        if (monthItem?.[activity_type] && !seen.has(entryKey)) {
+          seen.add(entryKey)
           entries.push({
-            activity_type,
+            activity_type: normalizedType,
             month: monthItem.month,
-            activity_label: getStageDisplay({ stageType: activity_type, stageName: activity_type }).label,
-            note: monthItem.notes?.find((n) => n.stage === activity_type)?.note || '',
+            activity_label: getStageDisplay({ stageType: normalizedType, stageName: normalizedType }).label,
+            note:
+              monthItem.notes?.find((n) => normalizeStageType(n.stage) === normalizedType)?.note || '',
           })
         }
       })
@@ -133,7 +141,7 @@ const CropCalendar = ({ calendar }) => {
 
       <div className="crop-calendar__legend">
         {activityTypes.map((type) => {
-          const { label, color, icon: Icon } = getActivityInfo(type)
+          const { label, color, icon: Icon } = getStageDisplay({ stageType: type, stageName: type })
           return (
             <div key={type} className="crop-calendar__legend-item">
               <span className="crop-calendar__legend-color" style={{ backgroundColor: color }} />
@@ -148,6 +156,7 @@ const CropCalendar = ({ calendar }) => {
           <span className="crop-calendar__legend-current" />
           <span>Tháng hiện tại</span>
         </div>
+        
       </div>
     </div>
   )

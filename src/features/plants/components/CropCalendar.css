@@ -171,3 +171,13 @@
   border-radius: var(--radius-sm);
   flex-shrink: 0;
 }
+
+.crop-calendar__admin-link {
+  margin-left: auto;
+}
+
+@media (max-width: 768px) {
+  .crop-calendar__admin-link {
+    margin-left: 0;
+  }
+}

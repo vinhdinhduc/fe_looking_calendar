@@ -5,7 +5,12 @@
 .contact-page__hero {
   background: linear-gradient(135deg, #164a38, #2f7d5f);
   color: #fff;
-  padding: var(--space-12) 0 var(--space-9);
+  padding: clamp(56px, 8vw, 88px) 0 clamp(40px, 6vw, 60px);
+}
+
+.contact-page__hero .container {
+  padding-top: var(--space-2);
+  padding-bottom: var(--space-2);
 }
 
 .contact-page__hero h1 {
@@ -14,6 +19,7 @@
   align-items: center;
   gap: 10px;
   font-size: clamp(1.9rem, 3.2vw, 2.5rem);
+  line-height: 1.35;
   font-family: var(--font-heading);
 }
 

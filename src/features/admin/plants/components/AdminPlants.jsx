@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import { adminPlantService } from '../services/adminPlantService'
 import { categoryService } from '../../../categories/services/categoryService'
 import { useToast } from '../../../../context/ToastContext'
@@ -13,8 +13,32 @@ import './AdminPlants.css'
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
 
 const EMPTY_FORM = {
-  name: '', scientific_name: '', description: '', soil_condition: '',
-  weather_condition: '', local_varieties: '', category_id: '', is_active: 1,
+  name: '',
+  local_name: '',
+  scientific_name: '',
+  description: '',
+  soil_condition: '',
+  climate_condition: '',
+  popular_varieties: '',
+  category_id: '',
+  is_active: 1,
+}
+
+const normalizeForm = (initial) => {
+  if (!initial) return { ...EMPTY_FORM }
+  return {
+    ...EMPTY_FORM,
+    ...initial,
+    category_id: initial.category_id ?? initial.category?.id ?? '',
+    is_active: Number(initial.is_active ?? 1),
+  }
+}
+
+const formatDate = (value) => {
+  if (!value) return '—'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return '—'
+  return date.toLocaleDateString('vi-VN')
 }
 
 const validate = (f) => {
@@ -26,12 +50,18 @@ const validate = (f) => {
 }
 
 const PlantForm = ({ initial, categories, onSave, onCancel, saving }) => {
-  const [form, setForm]         = useState(() => initial ? {...initial, category_id: initial.category?.id} : {EMPTY_FORM})
+  const [form, setForm]         = useState(() => normalizeForm(initial))
   const [errors, setErrors]     = useState({})
   const [imageFile, setImageFile] = useState(null)
 
   const [preview, setPreview]   = useState(initial?.image_url ? `${BASE_URL}${initial.image_url}` : null)
- 
+
+  useEffect(() => {
+    setForm(normalizeForm(initial))
+    setErrors({})
+    setImageFile(null)
+    setPreview(initial?.image_url ? `${BASE_URL}${initial.image_url}` : null)
+  }, [initial])
 
   const set = (field, val) => {
     setForm((p) => ({ ...p, [field]: val }))
@@ -50,7 +80,11 @@ const PlantForm = ({ initial, categories, onSave, onCancel, saving }) => {
     const errs = validate(form)
     if (Object.keys(errs).length) { setErrors(errs); return }
     const fd = new FormData()
-    Object.entries(form).forEach(([k, v]) => fd.append(k, v ?? ''))
+    Object.entries(form).forEach(([k, v]) => {
+      if (k === 'category') return
+      if (k === 'created_at' || k === 'updated_at' || k === 'view_count' || k === 'id') return
+      fd.append(k, v ?? '')
+    })
     if (imageFile) fd.append('image', imageFile)
     onSave(fd)
   }
@@ -63,6 +97,11 @@ const PlantForm = ({ initial, categories, onSave, onCancel, saving }) => {
           <input className={`admin-form__input ${errors.name ? 'admin-form__input--error' : ''}`}
             value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="Ngô, Lúa, Cà phê..." />
           {errors.name && <span className="admin-form__error-msg">{errors.name}</span>}
+        </div>
+        <div className="admin-form__field">
+          <label className="admin-form__label">Tên địa phương</label>
+          <input className="admin-form__input" value={form.local_name}
+            onChange={(e) => set('local_name', e.target.value)} placeholder="Khẩu nương (tiếng Thái)..." />
         </div>
         <div className="admin-form__field">
           <label className="admin-form__label">Tên khoa học</label>
@@ -106,16 +145,16 @@ const PlantForm = ({ initial, categories, onSave, onCancel, saving }) => {
             onChange={(e) => set('soil_condition', e.target.value)} placeholder="Đất tơi xốp, thoát nước tốt..." />
         </div>
         <div className="admin-form__field">
-          <label className="admin-form__label">Điều kiện thời tiết</label>
-          <textarea className="admin-form__textarea" rows={2} value={form.weather_condition}
-            onChange={(e) => set('weather_condition', e.target.value)} placeholder="Nhiệt độ 20-30°C, lượng mưa..." />
+          <label className="admin-form__label">Điều kiện khí hậu</label>
+          <textarea className="admin-form__textarea" rows={2} value={form.climate_condition}
+            onChange={(e) => set('climate_condition', e.target.value)} placeholder="Nhiệt độ 20-30°C, lượng mưa..." />
         </div>
       </div>
 
       <div className="admin-form__field">
         <label className="admin-form__label">Giống phổ biến tại địa phương</label>
-        <input className="admin-form__input" value={form.local_varieties}
-          onChange={(e) => set('local_varieties', e.target.value)} placeholder="Ngô nếp, ngô tẻ, ngô lai..." />
+        <input className="admin-form__input" value={form.popular_varieties}
+          onChange={(e) => set('popular_varieties', e.target.value)} placeholder="Ngô nếp, ngô tẻ, ngô lai..." />
       </div>
 
       <div className="admin-form__field">
@@ -148,7 +187,6 @@ const AdminPlants = () => {
   const [catFilter, setCatFilter]   = useState('')
   const [modalOpen, setModalOpen]   = useState(false)
   const [editing, setEditing]       = useState(null)
-  const searchRef = useRef(search)
 
   const fetchPlants = async (p = page, s = search, cat = catFilter, l = pageSize) => {
     setLoading(true)
@@ -170,7 +208,7 @@ const AdminPlants = () => {
   }, [])
 
   const openCreate = () => { setEditing(null); setModalOpen(true) }
-  const openEdit   = (plant) => { setEditing(plant) ; console.log("check plant",plant); setModalOpen(true) }
+  const openEdit   = (plant) => { setEditing(plant); setModalOpen(true) }
   const closeModal = () => { setModalOpen(false); setEditing(null) }
  
   
@@ -212,7 +250,6 @@ const AdminPlants = () => {
     e.preventDefault()
     fetchPlants(1, search, catFilter)
   }
-
   return (
     <div className="admin-table-page">
       <div className="admin-table-page__toolbar">
@@ -250,16 +287,17 @@ const AdminPlants = () => {
             <thead>
               <tr>
                 <th>Ảnh</th>
-                <th>Tên cây</th>
+                <th>Thông tin cây</th>
                 <th>Nhóm cây</th>
                 <th>Lượt xem</th>
                 <th>Trạng thái</th>
+                <th>Ngày tạo</th>
                 <th>Thao tác</th>
               </tr>
             </thead>
             <tbody>
               {plants.length === 0 ? (
-                <tr><td colSpan={6} className="admin-table__empty">Không có dữ liệu</td></tr>
+                <tr><td colSpan={7} className="admin-table__empty">Không có dữ liệu</td></tr>
               ) : plants.map((p) => (
                 <tr key={p.id}>
                   <td>
@@ -272,8 +310,10 @@ const AdminPlants = () => {
                   </td>
                   <td>
                     <strong>{p.name}</strong>
+                    {p.local_name && <><br /><small style={{ color: 'var(--text-secondary)' }}>{p.local_name}</small></>}
                     {p.scientific_name && <br />}
                     {p.scientific_name && <small style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>{p.scientific_name}</small>}
+                    {p.description && <><br /><small style={{ color: 'var(--text-secondary)' }}>{p.description.slice(0, 90)}{p.description.length > 90 ? '...' : ''}</small></>}
                   </td>
                   <td>{p.category?.name || '—'}</td>
                   <td>{p.view_count ?? 0}</td>
@@ -282,6 +322,7 @@ const AdminPlants = () => {
                       {p.is_active ? 'Hiển thị' : 'Ẩn'}
                     </span>
                   </td>
+                  <td>{formatDate(p.created_at)}</td>
                   <td>
                     <div className="admin-table__actions">
                       <button className="admin-table__action-btn admin-table__action-btn--edit" onClick={() => openEdit(p)}>Sửa</button>

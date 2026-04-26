@@ -11,6 +11,16 @@ import '../../AdminTable.css'
 
 const EMPTY_FORM = { question: '', answer: '', plant_id: '', is_active: 1 }
 
+const normalizeForm = (initial) => {
+  if (!initial) return { ...EMPTY_FORM }
+  return {
+    ...EMPTY_FORM,
+    ...initial,
+    plant_id: initial.plant_id ?? '',
+    is_active: Number(initial.is_active ?? 1),
+  }
+}
+
 const validate = (f) => {
   const e = {}
   if (!f.question?.trim()) e.question = 'Câu hỏi là bắt buộc'
@@ -19,8 +29,13 @@ const validate = (f) => {
 }
 
 const FaqForm = ({ initial, plants, onSave, onCancel, saving }) => {
-  const [form, setForm]   = useState(initial || EMPTY_FORM)
+  const [form, setForm]   = useState(normalizeForm(initial))
   const [errors, setErrors] = useState({})
+
+  useEffect(() => {
+    setForm(normalizeForm(initial))
+    setErrors({})
+  }, [initial])
 
   const set = (k, v) => {
     setForm((p) => ({ ...p, [k]: v }))
@@ -31,7 +46,11 @@ const FaqForm = ({ initial, plants, onSave, onCancel, saving }) => {
     e.preventDefault()
     const errs = validate(form)
     if (Object.keys(errs).length) { setErrors(errs); return }
-    onSave(form)
+    onSave({
+      ...form,
+      plant_id: form.plant_id === '' ? null : Number(form.plant_id),
+      is_active: Number(form.is_active),
+    })
   }
 
   return (

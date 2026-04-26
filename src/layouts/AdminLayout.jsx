@@ -9,6 +9,7 @@ import {
   LuLeaf,
   LuLayoutDashboard,
   LuLogOut,
+  LuMail,
   LuMenu,
   LuPanelLeftClose,
   LuPanelLeftOpen,
@@ -30,6 +31,7 @@ const NAV_ITEMS = [
   { to: '/admin/calendar',    label: 'Lịch thời vụ', icon: LuCalendarDays },
   { to: '/admin/care-stages', label: 'Kỹ thuật',     icon: LuWrench },
   { to: '/admin/faqs',        label: 'Hỏi & Đáp',    icon: LuCircleHelp },
+  { to: '/admin/contacts',    label: 'Liên hệ',      icon: LuMail, adminOnly: true },
   { to: '/admin/users',       label: 'Người dùng',   icon: LuUsers, adminOnly: true },
 ]
 

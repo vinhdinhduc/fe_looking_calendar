@@ -7,6 +7,7 @@ import PlantsPage      from '../pages/PlantsPage'
 import PlantDetailPage from '../pages/PlantDetailPage'
 import CalendarPage    from '../pages/CalendarPage'
 import FaqsPage        from '../pages/FaqsPage'
+import ContactPage     from '../pages/ContactPage'
 import LoginPage       from '../pages/LoginPage'
 import NotFoundPage    from '../pages/NotFoundPage'
 
@@ -18,6 +19,7 @@ import {
   AdminCalendarPage,
   AdminCareStagesPage,
   AdminFaqsPage,
+  AdminContactsPage,
   AdminUsersPage,
 } from '../pages/admin/AdminPages'
 
@@ -37,6 +39,7 @@ const AppRouter = () => (
           <Route path="/plants/:id" element={<PlantDetailPage />} />
           <Route path="/calendar"  element={<CalendarPage />} />
           <Route path="/faqs"      element={<FaqsPage />} />
+          <Route path="/contact"   element={<ContactPage />} />
           <Route path="/login"     element={<LoginPage />} />
 
           {/* ── Admin (requires auth) ────────────────────────────── */}
@@ -67,6 +70,10 @@ const AppRouter = () => (
           <Route
             path="/admin/faqs"
             element={<ProtectedRoute><AdminFaqsPage /></ProtectedRoute>}
+          />
+          <Route
+            path="/admin/contacts"
+            element={<ProtectedRoute adminOnly><AdminContactsPage /></ProtectedRoute>}
           />
           <Route
             path="/admin/users"

@@ -1,6 +1,6 @@
  
 import React from 'react'
-import { LuCalendarDays, LuCircleHelp, LuFolderTree, LuLayoutDashboard, LuLeaf, LuUsers, LuWrench } from 'react-icons/lu'
+import { LuCalendarDays, LuCircleHelp, LuFolderTree, LuLayoutDashboard, LuLeaf, LuMail, LuUsers, LuWrench } from 'react-icons/lu'
 import AdminLayout from '../../layouts/AdminLayout'
 import DashboardStats from '../../features/admin/dashboard/components/DashboardStats'
 import './AdminPage.css'
@@ -112,6 +112,7 @@ export const AdminFaqsPage = () => (
 
  
 import AdminUsers from '../../features/admin/users/components/AdminUsers'
+import AdminContacts from '../../features/admin/contacts/components/AdminContacts'
 
 export const AdminUsersPage = () => (
   <AdminLayout>
@@ -124,6 +125,21 @@ export const AdminUsersPage = () => (
         <p className="admin-page__sub">Tài khoản quản trị viên và nhân viên hệ thống</p>
       </div>
       <AdminUsers />
+    </div>
+  </AdminLayout>
+)
+
+export const AdminContactsPage = () => (
+  <AdminLayout>
+    <div className="admin-page">
+      <div className="admin-page__header">
+        <h1 className="admin-page__title">
+          <LuMail aria-hidden="true" />
+          Quản lý Liên hệ tư vấn
+        </h1>
+        <p className="admin-page__sub">Theo dõi câu hỏi và yêu cầu hỗ trợ từ người dân</p>
+      </div>
+      <AdminContacts />
     </div>
   </AdminLayout>
 )

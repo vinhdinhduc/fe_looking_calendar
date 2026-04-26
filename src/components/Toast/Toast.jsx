@@ -13,7 +13,7 @@ const Toast = ({ toasts, onRemove }) => {
   if (!toasts.length) return null
 
   return (
-    <div className="toast-container" role="alert" aria-live="polite">
+    <div className="toast-container" role="alert" aria-live="polite" >
       {toasts.map((t) => {
         const Icon = ICONS[t.type] || LuInfo
         return (

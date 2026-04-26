@@ -9,6 +9,7 @@ const NAV_LINKS = [
   { to: '/plants',   label: 'Cây trồng' },
   { to: '/calendar', label: 'Lịch thời vụ' },
   { to: '/faqs',     label: 'Hỏi & Đáp' },
+  { to: '/contact',  label: 'Liên hệ' },
 ]
 
 const MainLayout = ({ children }) => {

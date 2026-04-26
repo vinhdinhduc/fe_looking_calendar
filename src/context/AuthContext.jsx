@@ -26,10 +26,10 @@ export const AuthProvider = ({ children }) => {
     verify()
   }, [])
 
-  const login = useCallback(async (username, password) => {
+  const login = useCallback(async (username, password, rememberMe = true) => {
     const result = await authService.login(username, password)
-    setTokens(result.accessToken, result.refreshToken)
-    saveUser(result.user)
+    setTokens(result.accessToken, result.refreshToken, { remember: rememberMe })
+    saveUser(result.user, { remember: rememberMe })
     setUser(result.user)
     return result
   }, [])

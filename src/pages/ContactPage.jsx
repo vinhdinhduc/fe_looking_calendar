@@ -200,7 +200,7 @@ const ContactPage = () => {
               <li><LuUserRound aria-hidden="true" /> Họ tên và số điện thoại có thể liên hệ</li>
               <li><LuSprout aria-hidden="true" /> Loại cây trồng và giai đoạn sinh trưởng hiện tại</li>
               <li><LuPhoneCall aria-hidden="true" /> Mô tả triệu chứng sâu bệnh hoặc khó khăn đang gặp</li>
-              <li><LuMessageSquare aria-hidden="true" /> Ảnh chụp thực tế và thời gian xuất hiện vấn đề (nếu có)</li>
+             
             </ul>
           </aside>
         </section>

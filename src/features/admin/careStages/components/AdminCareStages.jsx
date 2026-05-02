@@ -26,13 +26,15 @@ const validate = (f) => {
   return e
 }
 
-const StageForm = ({ initial, plants, onSave, onCancel, saving }) => {
+const StageForm = ({ initial, plants, existingImages = [], onSave, onCancel, saving }) => {
   const [form, setForm]   = useState(initial || EMPTY_FORM)
   const [errors, setErrors] = useState({})
+  const [pendingImages, setPendingImages] = useState([])
 
   useEffect(() => {
     setForm(initial || EMPTY_FORM)
     setErrors({})
+    setPendingImages([])
   }, [initial])
 
   const set = (k, v) => {
@@ -44,7 +46,35 @@ const StageForm = ({ initial, plants, onSave, onCancel, saving }) => {
     e.preventDefault()
     const errs = validate(form)
     if (Object.keys(errs).length) { setErrors(errs); return }
-    onSave(form)
+    onSave({ ...form, images: pendingImages })
+  }
+
+  const handleImageSelect = (e) => {
+    const files = Array.from(e.target.files || [])
+    if (files.length === 0) return
+
+    const nextImages = files.map((file, index) => ({
+      id: `${file.name}-${file.size}-${Date.now()}-${index}`,
+      file,
+      caption: '',
+      sort_order: pendingImages.length + index + 1,
+      previewUrl: URL.createObjectURL(file),
+    }))
+
+    setPendingImages((prev) => [...prev, ...nextImages])
+    e.target.value = ''
+  }
+
+  const updatePendingImage = (id, field, value) => {
+    setPendingImages((prev) => prev.map((item) => (item.id === id ? { ...item, [field]: value } : item)))
+  }
+
+  const removePendingImage = (id) => {
+    setPendingImages((prev) => {
+      const target = prev.find((item) => item.id === id)
+      if (target?.previewUrl) URL.revokeObjectURL(target.previewUrl)
+      return prev.filter((item) => item.id !== id)
+    })
   }
 
   return (
@@ -144,6 +174,72 @@ const StageForm = ({ initial, plants, onSave, onCancel, saving }) => {
         />
       </div>
 
+      {existingImages.length > 0 && (
+        <div className="admin-form__field">
+          <label className="admin-form__label">Ảnh hiện có</label>
+          <div className="admin-care__existing-images">
+            {existingImages.map((img) => (
+              <figure key={img.id} className="admin-care__image-card">
+                <img
+                  src={`${BASE_URL}${img.image_url}`}
+                  alt={img.caption || form.stage_name || 'Ảnh minh họa'}
+                  className="admin-care__image-preview"
+                  onError={(e) => { e.currentTarget.style.display = 'none' }}
+                />
+                {img.caption && <figcaption>{img.caption}</figcaption>}
+              </figure>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="admin-form__field">
+        <label className="admin-form__label">Thêm ảnh minh họa</label>
+        <input
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={handleImageSelect}
+          className="admin-form__input"
+        />
+        <p className="admin-care__hint">Chọn một hoặc nhiều ảnh. Ảnh sẽ được tải lên sau khi lưu giai đoạn.</p>
+
+        {pendingImages.length > 0 && (
+          <div className="admin-care__pending-images">
+            {pendingImages.map((image, index) => (
+              <div key={image.id} className="admin-care__pending-image-item">
+                <img
+                  src={image.previewUrl}
+                  alt={image.caption || image.file.name}
+                  className="admin-care__pending-thumb"
+                />
+                <div className="admin-care__pending-meta">
+                  <div className="admin-care__pending-filename">{index + 1}. {image.file.name}</div>
+                  <input
+                    className="admin-form__input"
+                    value={image.caption}
+                    onChange={(e) => updatePendingImage(image.id, 'caption', e.target.value)}
+                    placeholder="Chú thích ảnh (tuỳ chọn)"
+                  />
+                  <div className="admin-form__row admin-care__pending-row">
+                    <input
+                      type="number"
+                      className="admin-form__input"
+                      min={0}
+                      value={image.sort_order}
+                      onChange={(e) => updatePendingImage(image.id, 'sort_order', Number(e.target.value) || 0)}
+                    />
+                    <Button variant="ghost" size="sm" type="button" onClick={() => removePendingImage(image.id)}>
+                      Xóa
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       <div className="admin-form__actions">
         <Button variant="ghost" onClick={onCancel} type="button">Hủy</Button>
         <Button variant="primary" type="submit" loading={saving}>
@@ -199,6 +295,7 @@ const AdminCareStages = () => {
   const closeModal = () => { setModalOpen(false); setEditing(null) }
 
   const handleSave = async (data) => {
+    const pendingImages = Array.isArray(data.images) ? data.images : []
     const payload = {
       plant_id: Number(data.plant_id),
       stage_name: data.stage_name?.trim(),
@@ -211,17 +308,33 @@ const AdminCareStages = () => {
     }
 
     setSaving(true)
+    let savedStage = null
     try {
       if (editing) {
-        await adminCareStageService.update(editing.id, payload)
-        toast.success('Cập nhật giai đoạn thành công!')
+        savedStage = await adminCareStageService.update(editing.id, payload)
       } else {
-        await adminCareStageService.create(payload)
-        toast.success('Thêm giai đoạn thành công!')
+        savedStage = await adminCareStageService.create(payload)
       }
+
+      const stageId = savedStage?.id || editing?.id
+      const uploads = pendingImages.filter((image) => image?.file)
+
+      for (const image of uploads) {
+        const formData = new FormData()
+        formData.append('image', image.file)
+        formData.append('caption', image.caption || '')
+        formData.append('sort_order', String(image.sort_order ?? 0))
+        await adminCareStageService.addImage(stageId, formData)
+      }
+
+      toast.success(editing ? 'Cập nhật giai đoạn thành công!' : 'Thêm giai đoạn thành công!')
       closeModal()
       if (selectedPlant) fetchStages(selectedPlant, page, limit)
     } catch (err) {
+      if (savedStage) {
+        closeModal()
+        if (selectedPlant) fetchStages(selectedPlant, page, limit)
+      }
       toast.error(err?.response?.data?.message || err.message)
     } finally { setSaving(false) }
   }
@@ -338,6 +451,7 @@ const AdminCareStages = () => {
               }
             : { ...EMPTY_FORM, plant_id: selectedPlant }}
           plants={plants}
+          existingImages={editing?.images || []}
           onSave={handleSave}
           onCancel={closeModal}
           saving={saving}

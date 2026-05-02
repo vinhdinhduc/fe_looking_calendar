@@ -111,14 +111,16 @@ const CareStages = ({ stages }) => {
             </h4>
             <div className="care-stages__image-grid">
               {active.images.map((img) => (
-                <img
-                  key={img.id}
-                  src={`${BASE_URL}${img.image_url}`}
-                  alt={img.caption || active.stage_name}
-                  className="care-stages__image"
-                  loading="lazy"
-                  onError={(e) => { e.target.style.display = 'none' }}
-                />
+                <figure key={img.id} className="care-stages__image-figure">
+                  <img
+                    src={`${BASE_URL}${img.image_url}`}
+                    alt={img.caption || active.stage_name}
+                    className="care-stages__image"
+                    loading="lazy"
+                    onError={(e) => { e.currentTarget.style.display = 'none' }}
+                  />
+                  {img.caption && <figcaption className="care-stages__image-caption">{img.caption}</figcaption>}
+                </figure>
               ))}
             </div>
           </div>

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { adminContactService } from '../services/adminContactService'
+import { adminUserService } from '../../users/services/adminUserService'
 import { useToast } from '../../../../context/ToastContext'
 import Button from '../../../../components/Button/Button'
 import PageSizeSelector from '../../../../components/PageSizeSelector/PageSizeSelector'
@@ -37,6 +38,8 @@ const AdminContacts = () => {
   const [pageSize, setPageSize] = useState(10)
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('')
+  const [staffOptions, setStaffOptions] = useState([])
+  const [assigningId, setAssigningId] = useState(null)
 
   const fetchData = async (p = 1, s = search, st = status, l = pageSize) => {
     setLoading(true)
@@ -60,6 +63,33 @@ const AdminContacts = () => {
   useEffect(() => {
     fetchData()
   }, [])
+
+  useEffect(() => {
+    const fetchStaff = async () => {
+      try {
+        const res = await adminUserService.getAll({ role: 'staff', is_active: 1, page: 1, limit: 200 })
+        setStaffOptions(res.data || [])
+      } catch (err) {
+        toast.error(err?.response?.data?.message || err.message)
+      }
+    }
+
+    fetchStaff()
+  }, [])
+
+  const handleAssign = async (item, value) => {
+    const assignedTo = value ? Number(value) : null
+    setAssigningId(item.id)
+    try {
+      await adminContactService.assign(item.id, assignedTo)
+      toast.success(assignedTo ? 'Đã gán cán bộ phụ trách' : 'Đã bỏ gán cán bộ phụ trách')
+      await fetchData(page, search, status, pageSize)
+    } catch (err) {
+      toast.error(err?.response?.data?.message || err.message)
+    } finally {
+      setAssigningId(null)
+    }
+  }
 
   return (
     <div className="admin-table-page">
@@ -105,6 +135,7 @@ const AdminContacts = () => {
                 <th>Người liên hệ</th>
                 <th>Nội dung</th>
                 <th>Phân loại</th>
+                <th>Cán bộ phụ trách</th>
                 <th>Trạng thái</th>
                 <th>Thời gian gửi</th>
               </tr>
@@ -112,7 +143,7 @@ const AdminContacts = () => {
             <tbody>
               {items.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="admin-table__empty">Chưa có yêu cầu liên hệ nào</td>
+                  <td colSpan={6} className="admin-table__empty">Chưa có yêu cầu liên hệ nào</td>
                 </tr>
               ) : items.map((item) => (
                 <tr key={item.id}>
@@ -154,6 +185,26 @@ const AdminContacts = () => {
                         <small style={{ color: 'var(--text-muted)' }}>{item.preferred_contact_time}</small>
                       </>
                     )}
+                  </td>
+                  <td style={{ minWidth: 220 }}>
+                    <select
+                      className="admin-form__select"
+                      value={item.assigned_to || ''}
+                      onChange={(e) => handleAssign(item, e.target.value)}
+                      disabled={assigningId === item.id}
+                    >
+                      <option value="">Chưa gán</option>
+                      {item.assignee && !staffOptions.some((s) => s.id === item.assignee.id) && (
+                        <option value={item.assignee.id}>
+                          {(item.assignee.full_name || item.assignee.username)} (đã gán trước đó)
+                        </option>
+                      )}
+                      {staffOptions.map((staff) => (
+                        <option key={staff.id} value={staff.id}>
+                          {staff.full_name || staff.username}
+                        </option>
+                      ))}
+                    </select>
                   </td>
                   <td>
                     <span className={`badge badge--${item.status === 'resolved' ? 'active' : 'inactive'}`}>
